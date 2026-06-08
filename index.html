@@ -15,7 +15,7 @@
     --dark-3: #1a1a24;
     --dark-4: #22222e;
     --text: #e8e8f0;
-    --text-muted: #7a7a9a;
+    --text-muted: #a0a0c0;
     --green: #00843D;
     --blue: #003DA5;
   }
@@ -109,7 +109,7 @@
 
   .header-eyebrow {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     letter-spacing: 4px;
     color: var(--gold);
@@ -117,6 +117,8 @@
     margin-bottom: 12px;
     opacity: 0;
     animation: fadeUp 0.6s ease forwards 0.1s;
+    text-decoration: none;
+    -webkit-text-decoration: none;
   }
 
   .header-title {
@@ -128,10 +130,14 @@
     text-shadow: 0 0 60px rgba(212,175,55,0.3);
     opacity: 0;
     animation: fadeUp 0.6s ease forwards 0.2s;
+    text-decoration: none;
+    -webkit-text-decoration: none;
   }
 
   .header-title span {
     color: var(--gold);
+    text-decoration: none;
+    -webkit-text-decoration: none;
   }
 
   .header-sub {
@@ -521,7 +527,7 @@
 
   <!-- HEADER -->
   <header class="header">
-    <div class="header-eyebrow">⚽ USA · Canada · Mexico 2026</div>
+    <div class="header-eyebrow">USA · Canada · Mexico · 2026</div>
     <div class="header-title">Dutton Ranch<br><span>World Cup</span><br>Pool</div>
     <div class="header-sub">Winner Takes All · $20 Buy-In</div>
     <div class="header-divider"></div>
@@ -550,7 +556,7 @@
   <!-- MOBILE TAB BAR -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Standings</button>
-    <button class="tab-btn" onclick="showTab('picks')">📋 Picks</button>
+    <button class="tab-btn" onclick="showTab('picks')">⚽ Picks</button>
   </div>
 
   <!-- LEADERBOARD -->
@@ -571,7 +577,7 @@
 
   <!-- PICKS TABLE (desktop) -->
   <div class="picks-section" id="picksSection">
-    <div class="section-header">📋 All Picks</div>
+    <div class="section-header">⚽ All Picks</div>
     <div id="picksTableWrap">
       <div class="loading">
         <div class="loading-spinner"></div>
@@ -627,12 +633,10 @@ function parseGviz(json) {
   const data = [header];
   rows.forEach(row => {
     const rawCells = row.c || [];
-    // Pad to full column count so missing trailing cells don't shift indexes
     while (rawCells.length < cols.length) rawCells.push(null);
     const cells = rawCells.map(cell => {
       if (cell === null || cell === undefined) return '';
       if (cell.v === null || cell.v === undefined) return '';
-      // Use formatted value if available, else raw value
       return cell.f !== undefined && cell.f !== null ? cell.f : String(cell.v);
     });
     data.push(cells);
@@ -681,8 +685,8 @@ function renderLeaderboard(data) {
             ${pickChip('🥇 1st', p1)}
             ${pickChip('🥈 2nd', p2)}
             ${pickChip('🥉 3rd', p3)}
-            ${pickChip('4️⃣ 4th', p4)}
-            ${pickChip('🍼 Virgin', virgin)}
+            ${pickChip('🔘 4th', p4)}
+            ${pickChip('💫 Debut', virgin)}
             ${pickChip('⭐ Fan Fav', fanfav)}
           </div>
         </div>
@@ -727,8 +731,8 @@ function renderPicksTable(players) {
       <th>🥇 1st</th>
       <th>🥈 2nd</th>
       <th>🥉 3rd</th>
-      <th>4️⃣ 4th</th>
-      <th>🍼 Virgin</th>
+      <th>🔘 4th</th>
+      <th>💫 Debut</th>
       <th>⭐ Fan Fav</th>
     </tr></thead><tbody>`;
 
@@ -747,12 +751,12 @@ function renderPicksTable(players) {
 }
 
 function renderMobilePicks(players) {
-  let html = '<div class="section-header">📋 All Picks</div>';
+  let html = '<div class="section-header">⚽ All Picks</div>';
   players.forEach(row => {
     const name = row[1];
     const picks = [
       ['🥇 1st', row[3]], ['🥈 2nd', row[4]], ['🥉 3rd', row[5]],
-      ['4️⃣ 4th', row[6]], ['🍼 Virgin', row[7]], ['⭐ Fan Fav', row[8]]
+      ['🔘 4th', row[6]], ['💫 Debut', row[7]], ['⭐ Fan Fav', row[8]]
     ];
     html += `<div style="background:var(--dark-3);border-radius:8px;padding:14px 16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.06)">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;margin-bottom:10px">${name}</div>
