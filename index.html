@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
 <title>2026 Dutton Ranch World Cup Pool</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -438,11 +439,13 @@
   .footer {
     text-align: center;
     margin-top: 60px;
-    padding-top: 24px;
+    padding-top: 20px;
     border-top: 1px solid rgba(255,255,255,0.06);
-    font-size: 12px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
     color: var(--text-muted);
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
   }
 
   .refresh-btn {
@@ -549,7 +552,10 @@
     </div>
     <div class="status-item">
       <div class="status-label">Last Updated</div>
-      <div class="status-value" id="statUpdated">—</div>
+      <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
+        <div class="status-value" id="statUpdated">—</div>
+        <button onclick="loadData()" style="background:transparent;border:none;color:#505070;font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='#808090'" onmouseout="this.style.color='#505070'">↻</button>
+      </div>
     </div>
   </div>
 
@@ -590,8 +596,7 @@
   <div class="mobile-picks" id="mobilePicks"></div>
 
   <div class="footer">
-    <div>Data pulled live from Google Sheets</div>
-    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    <div>v1.3 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -685,7 +690,7 @@ function renderLeaderboard(data) {
             ${pickChip('🥇 1st', p1)}
             ${pickChip('🥈 2nd', p2)}
             ${pickChip('🥉 3rd', p3)}
-            ${pickChip('🔘 4th', p4)}
+            ${pickChip('🎗️ 4th', p4)}
             ${pickChip('💫 Debut', virgin)}
             ${pickChip('⭐ Fan Fav', fanfav)}
           </div>
@@ -731,7 +736,7 @@ function renderPicksTable(players) {
       <th>🥇 1st</th>
       <th>🥈 2nd</th>
       <th>🥉 3rd</th>
-      <th>🔘 4th</th>
+      <th>🎗️ 4th</th>
       <th>💫 Debut</th>
       <th>⭐ Fan Fav</th>
     </tr></thead><tbody>`;
@@ -756,7 +761,7 @@ function renderMobilePicks(players) {
     const name = row[1];
     const picks = [
       ['🥇 1st', row[3]], ['🥈 2nd', row[4]], ['🥉 3rd', row[5]],
-      ['🔘 4th', row[6]], ['💫 Debut', row[7]], ['⭐ Fan Fav', row[8]]
+      ['🎗️ 4th', row[6]], ['💫 Debut', row[7]], ['⭐ Fan Fav', row[8]]
     ];
     html += `<div style="background:var(--dark-3);border-radius:8px;padding:14px 16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.06)">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;margin-bottom:10px">${name}</div>
