@@ -13,6 +13,10 @@
           2nd pick muted with white bold dot separator,
           bot treatment (col J Is Bot), prize pool excludes bots,
           Last Updated reads from Meta tab B1, refresh btn removed
+  v1.5 — 1st pick gold metallic shimmer gradient (flag isolated),
+          2nd pick silver metallic shimmer gradient (flag isolated),
+          flag+team spacing enforced,
+          Real Name subtitle (teal) from Leaderboard col K — blank if not set
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -326,6 +330,14 @@
     text-overflow: ellipsis;
   }
 
+  .player-real-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: #4eb8b8;
+    letter-spacing: 0.04em;
+    margin-top: 1px;
+  }
+
   .bot-notice {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 11px;
@@ -610,7 +622,7 @@
   <div class="mobile-picks" id="mobilePicks"></div>
 
   <div class="footer">
-    <div>v1.4 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.5 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -672,7 +684,7 @@ function renderLeaderboard(data) {
   }
 
   // Row 0 = headers, rows 1+ = players
-  // Cols: A=Rank, B=Player, C=Total, D=1st, E=2nd, F=3rd, G=4th, H=Debut, I=FanFav, J=IsBot
+  // Cols: A=Rank, B=Player, C=Total, D=1st, E=2nd, F=3rd, G=4th, H=Debut, I=FanFav, J=IsBot, K=RealName
   const players = data.slice(1).filter(r => r[1] && r[1].trim() !== '');
 
   let html = '';
@@ -687,13 +699,18 @@ function renderLeaderboard(data) {
     const virgin = row[7] || '—';
     const fanfav = row[8] || '—';
     const isBot = (row[9] || '').trim().toUpperCase() === 'TRUE';
+    const realName = (row[10] || '').trim();
 
     const rankClass = rank == 1 ? 'rank-1' : rank == 2 ? 'rank-2' : rank == 3 ? 'rank-3' : '';
     const botClass = isBot ? 'is-bot' : '';
 
-    const t1 = p1.split(' - ')[0];
-    const t2 = p2.split(' - ')[0];
-    const preview = `<span style="color:#D4AF37">${t1}</span><span style="color:#ffffff;font-weight:700;">&nbsp;&nbsp;·&nbsp;&nbsp;</span><span style="color:#a0a0c0">${t2}</span>`;
+    const t1raw = p1.split(' - ')[0];
+    const t2raw = p2.split(' - ')[0];
+    const t1parts = t1raw.indexOf(' ') > -1 ? [t1raw.slice(0, t1raw.indexOf(' ')), t1raw.slice(t1raw.indexOf(' ') + 1)] : ['', t1raw];
+    const t2parts = t2raw.indexOf(' ') > -1 ? [t2raw.slice(0, t2raw.indexOf(' ')), t2raw.slice(t2raw.indexOf(' ') + 1)] : ['', t2raw];
+    const goldStyle = `background:linear-gradient(90deg,#b8882a 0%,#D4AF37 30%,#f5e27a 55%,#D4AF37 75%,#a87c20 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
+    const silverStyle = `background:linear-gradient(90deg,#707085 0%,#b0b0c8 20%,#e8e8f4 45%,#ffffff 55%,#c0c0d8 75%,#808090 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
+    const preview = `<span>${t1parts[0]} </span><span style="${goldStyle}">${t1parts[1]}</span><span style="color:#ffffff;font-weight:700;">&nbsp;&nbsp;·&nbsp;&nbsp;</span><span>${t2parts[0]} </span><span style="${silverStyle}">${t2parts[1]}</span>`;
     const botNotice = isBot ? `<div class="bot-notice">BOT — Not eligible for prize pool</div>` : '';
 
     html += `
@@ -701,6 +718,7 @@ function renderLeaderboard(data) {
         <div class="rank-num">${rank}</div>
         <div class="player-info">
           <div class="player-name">${name}</div>
+          ${realName ? `<div class="player-real-name">${realName}</div>` : ''}
           ${botNotice}
           <div class="player-picks-preview">${preview}</div>
         </div>
