@@ -1,4 +1,25 @@
 <!DOCTYPE html>
+<!--
+  ============================================================
+  DUTTON RANCH WORLD CUP POOL — DASHBOARD
+  ============================================================
+  v1.1 — Initial release
+  v1.2 — Null fix, eyebrow update, text-muted brightness,
+          Debut/4th emoji updates, footer versioning
+  v1.3 — 🎗️ 4th emoji (all 3 locations), trophy favicon,
+          refresh button moved to Last Updated status item,
+          footer updated (removed Google Sheets line, added version)
+  v1.4 — Player name 20px (unchanged), team names 15px, 1st pick gold /
+          2nd pick muted with white bold dot separator,
+          bot treatment (col J Is Bot), prize pool excludes bots,
+          Last Updated reads from Meta tab B1, refresh btn removed
+  ============================================================
+  SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
+  Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
+    F=3rd G=4th H=Debut I=FanFav J=IsBot
+  Meta tab: A1=Last Updated label, B1=date value
+  ============================================================
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -298,12 +319,27 @@
   }
 
   .player-picks-preview {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 2px;
+    font-size: 15px;
+    margin-top: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .bot-notice {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: #4eb8b8;
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+  }
+
+  .lb-row.is-bot {
+    border-left: 3px solid rgba(78,184,184,0.35);
+  }
+
+  .lb-row.is-bot .total-pts {
+    color: #606080;
   }
 
   .player-total {
@@ -448,26 +484,6 @@
     text-transform: uppercase;
   }
 
-  .refresh-btn {
-    display: inline-block;
-    margin-top: 12px;
-    padding: 8px 20px;
-    background: transparent;
-    border: 1px solid rgba(212,175,55,0.3);
-    color: var(--gold);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .refresh-btn:hover {
-    background: rgba(212,175,55,0.1);
-    border-color: var(--gold);
-  }
 
   /* ── ANIMATIONS ── */
   @keyframes fadeUp {
@@ -541,6 +557,7 @@
     <div class="status-item">
       <div class="status-label">Players</div>
       <div class="status-value" id="statPlayers">—</div>
+      <div id="statBots" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#4eb8b8;margin-top:3px;letter-spacing:0.5px;"></div>
     </div>
     <div class="status-item">
       <div class="status-label">Prize Pool</div>
@@ -552,10 +569,7 @@
     </div>
     <div class="status-item">
       <div class="status-label">Last Updated</div>
-      <div style="display:flex;align-items:center;gap:8px;justify-content:center;">
-        <div class="status-value" id="statUpdated">—</div>
-        <button onclick="loadData()" style="background:transparent;border:none;color:#505070;font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='#808090'" onmouseout="this.style.color='#505070'">↻</button>
-      </div>
+      <div class="status-value" id="statUpdated">—</div>
     </div>
   </div>
 
@@ -596,7 +610,7 @@
   <div class="mobile-picks" id="mobilePicks"></div>
 
   <div class="footer">
-    <div>v1.3 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.4 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -611,10 +625,12 @@ async function loadData() {
   document.getElementById('leaderboardRows').innerHTML = `<div class="loading"><div class="loading-spinner"></div>Loading standings...</div>`;
 
   try {
-    // Fetch Leaderboard tab (gid needed — we'll try to find it)
-    const leaderboardData = await fetchSheet('Leaderboard');
+    const [leaderboardData, metaData] = await Promise.all([
+      fetchSheet('Leaderboard'),
+      fetchSheet('Meta')
+    ]);
     renderLeaderboard(leaderboardData);
-    updateStatus(leaderboardData);
+    updateStatus(leaderboardData, metaData);
   } catch(e) {
     document.getElementById('leaderboardRows').innerHTML = `<div class="loading">⚠️ Could not load data. Make sure the sheet is set to "Anyone with the link can view".<br><br><small>${e.message}</small></div>`;
   }
@@ -656,7 +672,7 @@ function renderLeaderboard(data) {
   }
 
   // Row 0 = headers, rows 1+ = players
-  // Cols: A=Rank, B=Player, C=Total, D=1st, E=2nd, F=3rd, G=4th, H=Virgin, I=FanFav
+  // Cols: A=Rank, B=Player, C=Total, D=1st, E=2nd, F=3rd, G=4th, H=Debut, I=FanFav, J=IsBot
   const players = data.slice(1).filter(r => r[1] && r[1].trim() !== '');
 
   let html = '';
@@ -670,15 +686,22 @@ function renderLeaderboard(data) {
     const p4 = row[6] || '—';
     const virgin = row[7] || '—';
     const fanfav = row[8] || '—';
+    const isBot = (row[9] || '').trim().toUpperCase() === 'TRUE';
 
     const rankClass = rank == 1 ? 'rank-1' : rank == 2 ? 'rank-2' : rank == 3 ? 'rank-3' : '';
-    const preview = [p1, p2].map(p => p.split(' - ')[0]).join(' · ');
+    const botClass = isBot ? 'is-bot' : '';
+
+    const t1 = p1.split(' - ')[0];
+    const t2 = p2.split(' - ')[0];
+    const preview = `<span style="color:#D4AF37">${t1}</span><span style="color:#ffffff;font-weight:700;">&nbsp;&nbsp;·&nbsp;&nbsp;</span><span style="color:#a0a0c0">${t2}</span>`;
+    const botNotice = isBot ? `<div class="bot-notice">BOT — Not eligible for prize pool</div>` : '';
 
     html += `
-      <div class="lb-row ${rankClass}" onclick="togglePicks(this)">
+      <div class="lb-row ${rankClass} ${botClass}" onclick="togglePicks(this)">
         <div class="rank-num">${rank}</div>
         <div class="player-info">
           <div class="player-name">${name}</div>
+          ${botNotice}
           <div class="player-picks-preview">${preview}</div>
         </div>
         <div class="player-total">
@@ -781,12 +804,21 @@ function renderMobilePicks(players) {
   document.getElementById('mobilePicks').innerHTML = html;
 }
 
-function updateStatus(data) {
+function updateStatus(data, metaData) {
   const players = data.slice(1).filter(r => r[1] && r[1].trim() !== '');
-  document.getElementById('statPlayers').textContent = players.length;
-  document.getElementById('statPrize').textContent = `$${players.length * 20}`;
-  const now = new Date();
-  document.getElementById('statUpdated').textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const bots = players.filter(r => (r[9] || '').trim().toUpperCase() === 'TRUE');
+  const humans = players.filter(r => (r[9] || '').trim().toUpperCase() !== 'TRUE');
+  document.getElementById('statPlayers').textContent = humans.length;
+  document.getElementById('statPrize').textContent = `$${humans.length * 20}`;
+  const botsEl = document.getElementById('statBots');
+  if (bots.length > 0) {
+    botsEl.textContent = `+ ${bots.length} AI bot${bots.length > 1 ? 's' : ''}`;
+  } else {
+    botsEl.textContent = '';
+  }
+  // Read Last Updated from Meta tab row 1 col B (index 1)
+  const lastUpdated = (metaData && metaData[1] && metaData[1][1]) ? metaData[1][1] : '—';
+  document.getElementById('statUpdated').textContent = lastUpdated;
 }
 
 function showTab(tab) {
