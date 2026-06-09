@@ -17,6 +17,10 @@
           2nd pick silver metallic shimmer gradient (flag isolated),
           flag+team spacing enforced,
           Real Name subtitle (teal) from Leaderboard col K — blank if not set
+  v1.6 — Dynamic tournament countdown in status bar:
+          pre-tournament: label=Tournament value=Starts Jun 11,
+          during: label=Days to Final value=N,
+          post: label=Tournament value=Complete
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -576,8 +580,8 @@
       <div class="status-value" id="statPrize">—</div>
     </div>
     <div class="status-item">
-      <div class="status-label">Tournament</div>
-      <div class="status-value">Jun 11</div>
+      <div class="status-label" id="statTournamentLabel">Tournament</div>
+      <div class="status-value" id="statTournament">—</div>
     </div>
     <div class="status-item">
       <div class="status-label">Last Updated</div>
@@ -622,7 +626,7 @@
   <div class="mobile-picks" id="mobilePicks"></div>
 
   <div class="footer">
-    <div>v1.5 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.6 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -855,8 +859,32 @@ function showTab(tab) {
   }
 }
 
+function getTournamentStatus() {
+  const now = new Date();
+  const start = new Date('2026-06-11T00:00:00');
+  const finalDay = new Date('2026-07-19T00:00:00');
+  const dayAfterFinal = new Date('2026-07-20T00:00:00');
+
+  if (now < start) {
+    return { label: 'Tournament', value: 'Starts Jun 11' };
+  } else if (now < dayAfterFinal) {
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysLeft = Math.ceil((finalDay - now) / msPerDay);
+    return { label: 'Days to Final', value: daysLeft > 0 ? String(daysLeft) : '1' };
+  } else {
+    return { label: 'Tournament', value: 'Complete' };
+  }
+}
+
+function updateTournamentStatus() {
+  const { label, value } = getTournamentStatus();
+  document.getElementById('statTournamentLabel').textContent = label;
+  document.getElementById('statTournament').textContent = value;
+}
+
 // Load on start
 loadData();
+updateTournamentStatus();
 // Auto-refresh every 5 minutes
 setInterval(loadData, 5 * 60 * 1000);
 </script>
