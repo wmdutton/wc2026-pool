@@ -21,11 +21,15 @@
           pre-tournament: label=Tournament value=Starts Jun 11,
           during: label=Days to Final value=N,
           post: label=Tournament value=Complete
+  v1.7 — Now Playing strip (teal/cream states), Schedule tab, Starting Soon state,
+          gentlePulse on live dot, full team names on strip cards
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
     F=3rd G=4th H=Debut I=FanFav J=IsBot
   Meta tab: A1=Last Updated label, B1=date value
+  Schedule tab cols: A=Date B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag
+    G=Phase H=Group I=GameNum J=Broadcaster K=BroadcasterURL
   ============================================================
 -->
 <html lang="en">
@@ -48,6 +52,10 @@
     --text-muted: #a0a0c0;
     --green: #00843D;
     --blue: #003DA5;
+    --teal: #4eb8b8;
+    --bronze-light: #e8a050;
+    --cream: #d8c8a8;
+    --cream-border: rgba(216,200,168,0.32);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -549,6 +557,323 @@
     .mobile-picks.visible { display: block; }
     .leaderboard.hidden { display: none; }
   }
+
+  /* ── SCHEDULE SECTION ── */
+  .schedule-section { display: none; }
+  @media (max-width: 600px) {
+    .schedule-section.visible { display: block; }
+  }
+
+  /* ── NOW PLAYING STRIP ── */
+  .now-playing-strip {
+    display: none;
+    margin-bottom: 16px;
+  }
+  .now-playing-strip.visible { display: block; }
+
+  .now-playing-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .eyebrow-live  { color: #4eb8b8; }
+  .eyebrow-soon  { color: #d8c8a8; }
+
+  .now-playing-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-live { background: #4eb8b8; animation: gentlePulse 2.5s ease-in-out infinite; }
+  .dot-soon { background: #d8c8a8; animation: gentlePulse 2.5s ease-in-out infinite; }
+
+  .strip-scroll {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .now-card {
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    min-width: 0;
+  }
+  .now-card-live {
+    background: rgba(78,184,184,0.08);
+    border: 1px solid rgba(78,184,184,0.28);
+  }
+  .now-card-soon {
+    background: rgba(216,200,168,0.07);
+    border: 1px solid rgba(216,200,168,0.28);
+  }
+
+  .now-card-teams {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    color: #e8e8f0;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .now-card-vs {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    color: #a0a0c0;
+    letter-spacing: 1px;
+    margin: 0 2px;
+  }
+  .now-card-watch {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4eb8b8;
+    letter-spacing: 0.5px;
+  }
+  .now-card-watch-soon { color: #d8c8a8; }
+  .now-card-started {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: #a0a0c0;
+    margin-top: 2px;
+  }
+  .now-card-kickoff {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    color: rgba(216,200,168,0.7);
+    margin-top: 2px;
+  }
+
+  /* ── GAME CARDS ── */
+  .game-card {
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .gc-teams { flex: 1 1 70%; min-width: 0; }
+  .gc-meta  { flex: 0 0 30%; text-align: right; padding-top: 28px; }
+
+  .gc-phase {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .gc-team-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #e8e8f0;
+    line-height: 1.25;
+  }
+  .gc-divider { height: 1px; margin: 8px 0; }
+  .gc-time {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .gc-net {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .gc-net-soon { color: #d8c8a8; }
+  .gc-soon-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: #d8c8a8;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+  .gc-watch {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #4eb8b8;
+    margin-bottom: 3px;
+  }
+  .gc-live-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: #4eb8b8;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    line-height: 1;
+  }
+  .gc-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4eb8b8;
+    flex-shrink: 0;
+    animation: gentlePulse 2.5s ease-in-out infinite;
+  }
+  .gc-full-time {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── TIER CLASSES ── */
+  .tier-group { background: #1a1a24; border: 1px solid rgba(255,255,255,0.06); }
+  .tier-group .gc-phase     { color: #a0a0c0; }
+  .tier-group .gc-time      { color: #D4AF37; }
+  .tier-group .gc-net       { color: #a0a0c0; }
+  .tier-group .gc-full-time { color: #a0a0c0; }
+  .tier-group .gc-divider   { background: linear-gradient(90deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.01) 40%, transparent 40%); }
+
+  .tier-r32 { background: #1a1a24; border: 1px solid rgba(184,168,120,0.22); }
+  .tier-r32 .gc-phase     { color: #b8a878; }
+  .tier-r32 .gc-time      { color: #D4AF37; }
+  .tier-r32 .gc-net       { color: #b8a878; }
+  .tier-r32 .gc-full-time { color: #b8a878; }
+  .tier-r32 .gc-divider   { background: linear-gradient(90deg, rgba(184,168,120,0.45) 0%, rgba(184,168,120,0.02) 40%, transparent 40%); }
+
+  .tier-r16 { background: #1a1a24; border: 1px solid rgba(212,175,55,0.3); }
+  .tier-r16 .gc-phase     { color: #D4AF37; }
+  .tier-r16 .gc-time      { color: #D4AF37; }
+  .tier-r16 .gc-net       { color: #D4AF37; }
+  .tier-r16 .gc-full-time { color: #D4AF37; }
+  .tier-r16 .gc-divider   { background: linear-gradient(90deg, rgba(212,175,55,0.4) 0%, rgba(212,175,55,0.02) 40%, transparent 40%); }
+
+  .tier-qf { background: #1a1a24; border: 1px solid rgba(212,175,55,0.5); }
+  .tier-qf .gc-phase     { color: #D4AF37; }
+  .tier-qf .gc-time      { color: #D4AF37; }
+  .tier-qf .gc-net       { color: #D4AF37; }
+  .tier-qf .gc-full-time { color: #D4AF37; }
+  .tier-qf .gc-divider   { background: linear-gradient(90deg, rgba(212,175,55,0.6) 0%, rgba(212,175,55,0.02) 40%, transparent 40%); }
+
+  .tier-sf { background: #1a1a24; border: 1px solid rgba(240,208,96,0.5); }
+  .tier-sf .gc-phase     { color: #F0D060; }
+  .tier-sf .gc-time      { color: #F0D060; }
+  .tier-sf .gc-net       { color: #F0D060; }
+  .tier-sf .gc-full-time { color: #F0D060; }
+  .tier-sf .gc-divider   { background: linear-gradient(90deg, rgba(240,208,96,0.6) 0%, rgba(240,208,96,0.02) 40%, transparent 40%); }
+
+  .tier-3p { background: #1a1a24; border: 1px solid rgba(205,127,50,0.4); }
+  .tier-3p .gc-phase     { color: #cd7f32; }
+  .tier-3p .gc-time      { color: #cd7f32; }
+  .tier-3p .gc-net       { color: #cd7f32; }
+  .tier-3p .gc-full-time { color: #cd7f32; }
+  .tier-3p .gc-divider   { background: linear-gradient(90deg, rgba(205,127,50,0.5) 0%, rgba(205,127,50,0.02) 40%, transparent 40%); }
+
+  .tier-final { background: linear-gradient(135deg, #1a1a24, #22201a); border: 1px solid rgba(212,175,55,0.7); }
+  .tier-final .gc-phase     { color: #F0D060; }
+  .tier-final .gc-time      { color: #F0D060; }
+  .tier-final .gc-net       { color: #F0D060; }
+  .tier-final .gc-full-time { color: #F0D060; }
+  .tier-final .gc-divider   { background: linear-gradient(90deg, rgba(212,175,55,0.8) 0%, rgba(212,175,55,0.02) 40%, transparent 40%); }
+
+  /* ── CARD STATES ── */
+  .state-live      { border-color: rgba(78,184,184,0.45) !important; }
+  .state-full-time { opacity: 0.65; }
+  .state-starting-soon { border-color: rgba(216,200,168,0.38) !important; }
+
+  /* ── NO GAMES / PREVIEW ROWS ── */
+  .schedule-day-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: #e8e8f0;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .schedule-day-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
+  }
+  .no-games-inline {
+    padding: 20px 0 8px;
+  }
+  .no-games-main {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: #e8e8f0;
+  }
+  .no-games-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #a0a0c0;
+    margin-top: 4px;
+  }
+  .coming-up-header {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #e8e8f0;
+    margin: 16px 0 10px;
+    padding-bottom: 8px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.38) 0%, rgba(212,175,55,0.02) 40%, transparent 40%) bottom / 100% 1px no-repeat;
+  }
+  .preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .preview-row-teams {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(232,232,240,0.72);
+  }
+  .preview-row-phase {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #a0a0c0;
+    margin-top: 2px;
+  }
+  .preview-row-time {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: rgba(212,175,55,0.65);
+  }
+
+  /* ── PULSE ANIMATION ── */
+  @keyframes gentlePulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+  }
 </style>
 </head>
 <body>
@@ -589,10 +914,16 @@
     </div>
   </div>
 
+  <!-- NOW PLAYING STRIP -->
+  <div class="now-playing-strip" id="nowPlayingStrip">
+    <div class="now-playing-eyebrow" id="stripEyebrow"></div>
+    <div class="strip-scroll" id="stripCards"></div>
+  </div>
+
   <!-- MOBILE TAB BAR -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Standings</button>
-    <button class="tab-btn" onclick="showTab('picks')">⚽ Picks</button>
+    <button class="tab-btn" onclick="showTab('schedule')">⚽ Schedule</button>
   </div>
 
   <!-- LEADERBOARD -->
@@ -625,8 +956,15 @@
   <!-- MOBILE PICKS -->
   <div class="mobile-picks" id="mobilePicks"></div>
 
+  <!-- SCHEDULE (mobile) -->
+  <div class="schedule-section" id="scheduleSection">
+    <div id="scheduleCards">
+      <div class="loading"><div class="loading-spinner"></div>Loading schedule...</div>
+    </div>
+  </div>
+
   <div class="footer">
-    <div>v1.6 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.7 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -641,12 +979,15 @@ async function loadData() {
   document.getElementById('leaderboardRows').innerHTML = `<div class="loading"><div class="loading-spinner"></div>Loading standings...</div>`;
 
   try {
-    const [leaderboardData, metaData] = await Promise.all([
+    const [leaderboardData, metaData, scheduleData] = await Promise.all([
       fetchSheet('Leaderboard'),
-      fetchSheet('Meta')
+      fetchSheet('Meta'),
+      fetchSheet('Schedule')
     ]);
     renderLeaderboard(leaderboardData);
     updateStatus(leaderboardData, metaData);
+    renderSchedule(scheduleData);
+    renderNowPlayingStrip(scheduleData);
   } catch(e) {
     document.getElementById('leaderboardRows').innerHTML = `<div class="loading">⚠️ Could not load data. Make sure the sheet is set to "Anyone with the link can view".<br><br><small>${e.message}</small></div>`;
   }
@@ -847,15 +1188,23 @@ function showTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
 
-  const lb = document.getElementById('leaderboardSection');
-  const mp = document.getElementById('mobilePicks');
+  const lb       = document.getElementById('leaderboardSection');
+  const mp       = document.getElementById('mobilePicks');
+  const sched    = document.getElementById('scheduleSection');
+  const strip    = document.getElementById('nowPlayingStrip');
+
+  // Reset all
+  lb.classList.remove('hidden');
+  mp.classList.remove('visible');
+  sched.classList.remove('visible');
 
   if (tab === 'leaderboard') {
-    lb.classList.remove('hidden');
-    mp.classList.remove('visible');
-  } else {
+    // strip visible if it has cards
+    if (strip.dataset.hasCards === 'true') strip.classList.add('visible');
+  } else if (tab === 'schedule') {
     lb.classList.add('hidden');
-    mp.classList.add('visible');
+    sched.classList.add('visible');
+    strip.classList.remove('visible'); // hide strip on schedule tab
   }
 }
 
@@ -881,6 +1230,197 @@ function updateTournamentStatus() {
   document.getElementById('statTournamentLabel').textContent = label;
   document.getElementById('statTournament').textContent = value;
 }
+
+// ── SCHEDULE HELPERS ──
+
+function getPhaseLabel(row) {
+  const phase = row[6];
+  const group = row[7];
+  const gameNum = row[8];
+  if (phase === 'GROUP') return `Group ${group} · Game ${gameNum}`;
+  if (phase === 'R32')   return 'Round of 32';
+  if (phase === 'R16')   return 'Round of 16';
+  if (phase === 'QF')    return 'Quarter-Final';
+  if (phase === 'SF')    return 'Semi-Final';
+  if (phase === '3P')    return '3rd Place Match';
+  if (phase === 'FINAL') return '⭐ World Cup Final';
+  return phase;
+}
+
+function getTierClass(phase) {
+  const map = { GROUP:'tier-group', R32:'tier-r32', R16:'tier-r16', QF:'tier-qf', SF:'tier-sf', '3P':'tier-3p', FINAL:'tier-final' };
+  return map[phase] || 'tier-group';
+}
+
+function getCardState(kickoffUTC, phase) {
+  const now = Date.now();
+  const kickoff = new Date(kickoffUTC).getTime();
+  const minsFromKickoff = (now - kickoff) / 60000;
+  const isGroup = phase === 'GROUP';
+  if (minsFromKickoff < -15)                       return 'standard';
+  if (minsFromKickoff < 0)                         return 'starting-soon';
+  if (minsFromKickoff < 120)                       return 'live';
+  if (!isGroup && minsFromKickoff < 180)           return 'continued';
+  return 'full-time';
+}
+
+function isInStripWindow(kickoffUTC, phase) {
+  const minsFromKickoff = (Date.now() - new Date(kickoffUTC).getTime()) / 60000;
+  if (minsFromKickoff >= -15 && minsFromKickoff < 0)   return 'soon';
+  if (minsFromKickoff >= 0   && minsFromKickoff < 120) return 'live';
+  return null;
+}
+
+function getLocalTime(kickoffUTC) {
+  return new Date(kickoffUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function renderSchedule(data) {
+  const el = document.getElementById('scheduleCards');
+  if (!data || data.length < 2) {
+    el.innerHTML = '<div class="loading">No schedule data yet.</div>';
+    return;
+  }
+
+  const today = getTodayStr();
+  // rows 1+ (skip header)
+  const rows = data.slice(1).filter(r => r[0] && r[1]);
+  const todayRows = rows.filter(r => r[0] === today);
+
+  let html = `<div class="schedule-day-header">${new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'})}</div>`;
+
+  if (todayRows.length === 0) {
+    // No games today — find next date
+    const futureRows = rows.filter(r => r[0] > today).sort((a,b) => a[0].localeCompare(b[0]));
+    const nextDate = futureRows.length ? futureRows[0][0] : null;
+    const nextRows = nextDate ? futureRows.filter(r => r[0] === nextDate) : [];
+    const nextLabel = nextDate ? new Date(nextDate + 'T12:00:00').toLocaleDateString([], {month:'long', day:'numeric'}) : '';
+
+    html += `<div class="no-games-inline">
+      <div class="no-games-main">No Games Today</div>
+      <div class="no-games-sub">Rest Day</div>
+    </div>`;
+
+    if (nextRows.length) {
+      html += `<div class="coming-up-header">Coming Up · ${nextLabel}</div>`;
+      nextRows.forEach(r => {
+        html += `<div class="preview-row">
+          <div>
+            <div class="preview-row-teams">${r[4]} ${r[2]} vs ${r[5]} ${r[3]}</div>
+            <div class="preview-row-phase">${getPhaseLabel(r)}</div>
+          </div>
+          <div class="preview-row-time">${getLocalTime(r[1])}</div>
+        </div>`;
+      });
+    }
+  } else {
+    todayRows.forEach(r => {
+      const kickoffUTC = r[1];
+      const phase      = r[6];
+      const state      = getCardState(kickoffUTC, phase);
+      const tierClass  = getTierClass(phase);
+      const localTime  = getLocalTime(kickoffUTC);
+      const broadcaster = r[9];
+      const broadcasterUrl = r[10];
+      const phaseLabel = getPhaseLabel(r);
+
+      let stateClass = '';
+      if (state === 'starting-soon') stateClass = 'state-starting-soon';
+      else if (state === 'live' || state === 'continued') stateClass = 'state-live';
+      else if (state === 'full-time') stateClass = 'state-full-time';
+
+      let metaHtml = `<div class="gc-time">${localTime}</div>`;
+      if (state === 'standard') {
+        metaHtml += `<div class="gc-net">${broadcaster}</div>`;
+      } else if (state === 'starting-soon') {
+        metaHtml += `<div class="gc-net gc-net-soon">${broadcaster}</div><div class="gc-soon-label">Starting Soon</div>`;
+      } else if (state === 'live') {
+        metaHtml += `<div class="gc-watch">▶ Watch on ${broadcaster}</div><div class="gc-live-badge"><span class="gc-live-dot"></span>LIVE</div>`;
+      } else if (state === 'continued') {
+        metaHtml += `<div class="gc-watch">▶ Watch on ${broadcaster}</div>`;
+      } else if (state === 'full-time') {
+        metaHtml += `<div class="gc-net">${broadcaster}</div><div class="gc-full-time">Full Time</div>`;
+      }
+
+      html += `<div class="game-card ${tierClass} ${stateClass}" onclick="window.open('${broadcasterUrl}','_blank')">
+        <div class="gc-teams">
+          <div class="gc-phase">${phaseLabel}</div>
+          <div class="gc-team-name">${r[4]} ${r[2]}</div>
+          <div class="gc-divider"></div>
+          <div class="gc-team-name">${r[5]} ${r[3]}</div>
+        </div>
+        <div class="gc-meta">${metaHtml}</div>
+      </div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function renderNowPlayingStrip(data) {
+  const strip     = document.getElementById('nowPlayingStrip');
+  const eyebrow   = document.getElementById('stripEyebrow');
+  const cardsEl   = document.getElementById('stripCards');
+
+  if (!data || data.length < 2) return;
+
+  const rows = data.slice(1).filter(r => r[0] && r[1]);
+  const stripRows = rows.map(r => ({ row: r, window: isInStripWindow(r[1], r[6]) })).filter(x => x.window);
+
+  if (stripRows.length === 0) {
+    strip.dataset.hasCards = 'false';
+    return;
+  }
+
+  const liveCount = stripRows.filter(x => x.window === 'live').length;
+  const soonCount = stripRows.filter(x => x.window === 'soon').length;
+
+  // Eyebrow
+  if (liveCount > 0) {
+    eyebrow.className = 'now-playing-eyebrow eyebrow-live';
+    eyebrow.innerHTML = `<span class="now-playing-dot dot-live"></span> Now Playing`;
+  } else {
+    eyebrow.className = 'now-playing-eyebrow eyebrow-soon';
+    eyebrow.innerHTML = `<span class="now-playing-dot dot-soon"></span> Starting Soon`;
+  }
+
+  // Cards
+  let html = '';
+  stripRows.forEach(({ row: r, window: w }) => {
+    const localTime = getLocalTime(r[1]);
+    const broadcaster = r[9];
+    const broadcasterUrl = r[10];
+    if (w === 'live') {
+      html += `<div class="now-card now-card-live" onclick="window.open('${broadcasterUrl}','_blank')">
+        <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
+        <div class="now-card-watch">▶ Watch on ${broadcaster}</div>
+        <div class="now-card-started">Started ${localTime}</div>
+      </div>`;
+    } else {
+      html += `<div class="now-card now-card-soon" onclick="window.open('${broadcasterUrl}','_blank')">
+        <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
+        <div class="now-card-watch now-card-watch-soon">▶ Watch on ${broadcaster}</div>
+        <div class="now-card-kickoff">Kicks off ${localTime}</div>
+      </div>`;
+    }
+  });
+
+  cardsEl.innerHTML = html;
+  strip.dataset.hasCards = 'true';
+  // Only show strip if we're on the standings tab
+  const standingsActive = document.querySelector('.tab-btn.active') &&
+    document.querySelector('.tab-btn.active').textContent.includes('Standings');
+  if (standingsActive || !document.querySelector('.tab-bar').offsetParent) {
+    strip.classList.add('visible');
+  }
+}
+
+// ── END SCHEDULE ──
 
 // Load on start
 loadData();
