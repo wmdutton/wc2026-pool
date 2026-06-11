@@ -23,6 +23,8 @@
           post: label=Tournament value=Complete
   v1.7 — Now Playing strip (teal/cream states), Schedule tab, Starting Soon state,
           gentlePulse on live dot, full team names on strip cards
+  v1.7a — Remove ▶ arrow from Watch labels, gold shimmer on FINAL team names,
+           teal divider on live schedule cards, cream on starting-soon
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -792,10 +794,33 @@
   .tier-final .gc-full-time { color: #F0D060; }
   .tier-final .gc-divider   { background: linear-gradient(90deg, rgba(212,175,55,0.8) 0%, rgba(212,175,55,0.02) 40%, transparent 40%); }
 
+  /* FINAL team name shimmer — applied via .gc-team-shimmer span (text only, not flag) */
+  .gc-team-shimmer {
+    background: linear-gradient(90deg, #b8882a 0%, #D4AF37 25%, #f5e27a 50%, #D4AF37 75%, #a87c20 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   /* ── CARD STATES ── */
   .state-live      { border-color: rgba(78,184,184,0.45) !important; }
-  .state-full-time { opacity: 0.65; }
+  .state-live .gc-divider { background: linear-gradient(90deg, rgba(78,184,184,0.6) 0%, rgba(78,184,184,0.04) 40%, transparent 40%) !important; }
+  .state-continued { border-color: rgba(78,184,184,0.45) !important; }
+  .state-continued .gc-divider { background: linear-gradient(90deg, rgba(78,184,184,0.6) 0%, rgba(78,184,184,0.04) 40%, transparent 40%) !important; }
   .state-starting-soon { border-color: rgba(216,200,168,0.38) !important; }
+  .state-starting-soon .gc-divider { background: linear-gradient(90deg, rgba(216,200,168,0.5) 0%, rgba(216,200,168,0.04) 40%, transparent 40%) !important; }
+  .state-full-time { opacity: 0.65; }
+
+  /* ── FINAL STATE EXCEPTIONS — teal/cream metadata, gold time/divider/phase/teams ── */
+  .tier-final.state-live { border-color: rgba(78,184,184,0.5) !important; }
+  .tier-final.state-live .gc-divider { background: linear-gradient(90deg, rgba(212,175,55,0.8) 0%, rgba(212,175,55,0.02) 40%, transparent 40%) !important; }
+  .tier-final.state-continued { border-color: rgba(78,184,184,0.5) !important; }
+  .tier-final.state-continued .gc-divider { background: linear-gradient(90deg, rgba(212,175,55,0.8) 0%, rgba(212,175,55,0.02) 40%, transparent 40%) !important; }
+  .tier-final.state-starting-soon { border-color: rgba(216,200,168,0.45) !important; }
+  .tier-final.state-starting-soon .gc-divider { background: linear-gradient(90deg, rgba(212,175,55,0.8) 0%, rgba(212,175,55,0.02) 40%, transparent 40%) !important; }
+  .tier-final.state-starting-soon .gc-phase { color: #d8c8a8 !important; }
+  .tier-final.state-starting-soon .gc-net { color: #d8c8a8 !important; }
+  .tier-final.state-starting-soon .gc-soon-label { color: #d8c8a8 !important; }
 
   /* ── NO GAMES / PREVIEW ROWS ── */
   .schedule-day-header {
@@ -964,7 +989,7 @@
   </div>
 
   <div class="footer">
-    <div>v1.7 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.7a · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1331,7 +1356,8 @@ function renderSchedule(data) {
 
       let stateClass = '';
       if (state === 'starting-soon') stateClass = 'state-starting-soon';
-      else if (state === 'live' || state === 'continued') stateClass = 'state-live';
+      else if (state === 'live')      stateClass = 'state-live';
+      else if (state === 'continued') stateClass = 'state-continued';
       else if (state === 'full-time') stateClass = 'state-full-time';
 
       let metaHtml = `<div class="gc-time">${localTime}</div>`;
@@ -1340,19 +1366,28 @@ function renderSchedule(data) {
       } else if (state === 'starting-soon') {
         metaHtml += `<div class="gc-net gc-net-soon">${broadcaster}</div><div class="gc-soon-label">Starting Soon</div>`;
       } else if (state === 'live') {
-        metaHtml += `<div class="gc-watch">▶ Watch on ${broadcaster}</div><div class="gc-live-badge"><span class="gc-live-dot"></span>LIVE</div>`;
+        metaHtml += `<div class="gc-watch">Watch on ${broadcaster}</div><div class="gc-live-badge"><span class="gc-live-dot"></span>LIVE</div>`;
       } else if (state === 'continued') {
-        metaHtml += `<div class="gc-watch">▶ Watch on ${broadcaster}</div>`;
+        metaHtml += `<div class="gc-watch">Watch on ${broadcaster}</div>`;
       } else if (state === 'full-time') {
         metaHtml += `<div class="gc-net">${broadcaster}</div><div class="gc-full-time">Full Time</div>`;
       }
 
+      const isFinal = phase === 'FINAL';
+      const nameStyle = isFinal ? 'gc-team-shimmer' : '';
+      const homeTeam = isFinal
+        ? `${r[4]} <span class="${nameStyle}">${r[2]}</span>`
+        : `${r[4]} ${r[2]}`;
+      const awayTeam = isFinal
+        ? `${r[5]} <span class="${nameStyle}">${r[3]}</span>`
+        : `${r[5]} ${r[3]}`;
+
       html += `<div class="game-card ${tierClass} ${stateClass}" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="gc-teams">
           <div class="gc-phase">${phaseLabel}</div>
-          <div class="gc-team-name">${r[4]} ${r[2]}</div>
+          <div class="gc-team-name">${homeTeam}</div>
           <div class="gc-divider"></div>
-          <div class="gc-team-name">${r[5]} ${r[3]}</div>
+          <div class="gc-team-name">${awayTeam}</div>
         </div>
         <div class="gc-meta">${metaHtml}</div>
       </div>`;
@@ -1398,13 +1433,13 @@ function renderNowPlayingStrip(data) {
     if (w === 'live') {
       html += `<div class="now-card now-card-live" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
-        <div class="now-card-watch">▶ Watch on ${broadcaster}</div>
+        <div class="now-card-watch">Watch on ${broadcaster}</div>
         <div class="now-card-started">Started ${localTime}</div>
       </div>`;
     } else {
       html += `<div class="now-card now-card-soon" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
-        <div class="now-card-watch now-card-watch-soon">▶ Watch on ${broadcaster}</div>
+        <div class="now-card-watch now-card-watch-soon">Watch on ${broadcaster}</div>
         <div class="now-card-kickoff">Kicks off ${localTime}</div>
       </div>`;
     }
