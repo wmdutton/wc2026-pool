@@ -23,14 +23,17 @@
           post: label=Tournament value=Complete
   v1.7 — Now Playing strip (teal/cream states), Schedule tab, Starting Soon state,
           gentlePulse on live dot, full team names on strip cards
-  v1.7a — Remove ▶ arrow from Watch labels, gold shimmer on FINAL team names,
-           teal divider on live schedule cards, cream on starting-soon
+  v1.7.1 — Derive schedule date from UTC timestamp (fixes UTC midnight bug),
+            FINAL card starting-soon gc-phase gold shimmer fix,
+            "Coming Up" next match day preview below today's games,
+            full-brightness preview row team names,
+            pull-to-refresh gesture on mobile
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
-    F=3rd G=4th H=Debut I=FanFav J=IsBot
+    F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
   Meta tab: A1=Last Updated label, B1=date value
-  Schedule tab cols: A=Date B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag
+  Schedule tab cols: A=Date(ref only) B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag
     G=Phase H=Group I=GameNum J=Broadcaster K=BroadcasterURL
   ============================================================
 -->
@@ -38,7 +41,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+<link rel="icon" type="image/png" href="trionda.png">
 <title>2026 Dutton Ranch World Cup Pool</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -818,7 +821,16 @@
   .tier-final.state-continued .gc-divider { background: linear-gradient(90deg, rgba(212,175,55,0.8) 0%, rgba(212,175,55,0.02) 40%, transparent 40%) !important; }
   .tier-final.state-starting-soon { border-color: rgba(216,200,168,0.45) !important; }
   .tier-final.state-starting-soon .gc-divider { background: linear-gradient(90deg, rgba(212,175,55,0.8) 0%, rgba(212,175,55,0.02) 40%, transparent 40%) !important; }
-  .tier-final.state-starting-soon .gc-phase { color: #d8c8a8 !important; }
+  .tier-final.state-starting-soon .gc-phase {
+    background: linear-gradient(90deg,
+      #8a6818 0%, #c8a830 10%, #edd97a 17%, #c8a830 24%,
+      #8a6010 33%, #7a5808 42%, #c8a830 52%, #edd97a 59%,
+      #c8a830 66%, #8a6818 75%, #7a5808 100%
+    ) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
   .tier-final.state-starting-soon .gc-net { color: #d8c8a8 !important; }
   .tier-final.state-starting-soon .gc-soon-label { color: #d8c8a8 !important; }
 
@@ -878,7 +890,7 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 16px;
     font-weight: 600;
-    color: rgba(232,232,240,0.72);
+    color: #e8e8f0;
   }
   .preview-row-phase {
     font-family: 'Barlow Condensed', sans-serif;
@@ -899,6 +911,36 @@
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.2; }
   }
+
+  /* ── PULL TO REFRESH ── */
+  #ptr-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.15s ease;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  #ptr-indicator.visible { height: 48px; }
+  #ptr-indicator.refreshing { color: var(--teal); }
+  .ptr-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(78,184,184,0.3);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  #ptr-indicator.refreshing .ptr-spinner { display: block; }
+  #ptr-indicator.refreshing .ptr-arrow   { display: none; }
+  .ptr-arrow { font-size: 16px; transition: transform 0.15s ease; }
 </style>
 </head>
 <body>
@@ -909,6 +951,13 @@
 </div>
 
 <div class="container">
+
+  <!-- PULL TO REFRESH INDICATOR -->
+  <div id="ptr-indicator">
+    <span class="ptr-arrow">↓</span>
+    <div class="ptr-spinner"></div>
+    <span id="ptr-label">Release to refresh</span>
+  </div>
 
   <!-- HEADER -->
   <header class="header">
@@ -948,7 +997,7 @@
   <!-- MOBILE TAB BAR -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Standings</button>
-    <button class="tab-btn" onclick="showTab('schedule')">⚽ Schedule</button>
+    <button class="tab-btn" onclick="showTab('schedule')"><img src="trionda.png" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;">Schedule</button>
   </div>
 
   <!-- LEADERBOARD -->
@@ -969,7 +1018,7 @@
 
   <!-- PICKS TABLE (desktop) -->
   <div class="picks-section" id="picksSection">
-    <div class="section-header">⚽ All Picks</div>
+    <div class="section-header"><img src="trionda.png" style="width:20px;height:20px;vertical-align:-4px;margin-right:6px;">All Picks</div>
     <div id="picksTableWrap">
       <div class="loading">
         <div class="loading-spinner"></div>
@@ -989,7 +1038,7 @@
   </div>
 
   <div class="footer">
-    <div>v1.7a · June 2026 · Created by Mason Dutton</div>
+    <div>v1.7.1 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1167,7 +1216,7 @@ function renderPicksTable(players) {
 }
 
 function renderMobilePicks(players) {
-  let html = '<div class="section-header">⚽ All Picks</div>';
+  let html = '<div class="section-header"><img src="trionda.png" style="width:20px;height:20px;vertical-align:-4px;margin-right:6px;">All Picks</div>';
   players.forEach(row => {
     const name = row[1];
     const picks = [
@@ -1300,6 +1349,11 @@ function getLocalTime(kickoffUTC) {
   return new Date(kickoffUTC).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
+function getLocalDateStr(kickoffUTC) {
+  const d = new Date(kickoffUTC);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function getTodayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -1313,46 +1367,37 @@ function renderSchedule(data) {
   }
 
   const today = getTodayStr();
-  // rows 1+ (skip header)
-  const rows = data.slice(1).filter(r => r[0] && r[1]);
-  const todayRows = rows.filter(r => r[0] === today);
+  // Derive local date from UTC timestamp — ignore col A entirely
+  const rows = data.slice(1).filter(r => r[1] && r[1].trim() !== '');
+  const todayRows = rows.filter(r => getLocalDateStr(r[1]) === today);
+
+  // Find next match day after today (always shown regardless of today's games)
+  const futureRows = rows
+    .filter(r => getLocalDateStr(r[1]) > today)
+    .sort((a, b) => new Date(a[1]) - new Date(b[1]));
+  const nextDateStr = futureRows.length ? getLocalDateStr(futureRows[0][1]) : null;
+  const nextRows = nextDateStr ? futureRows.filter(r => getLocalDateStr(r[1]) === nextDateStr) : [];
+  const nextLabel = nextDateStr
+    ? new Date(futureRows[0][1]).toLocaleDateString([], { weekday: 'short', month: 'long', day: 'numeric' })
+    : '';
 
   let html = `<div class="schedule-day-header">${new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'})}</div>`;
 
   if (todayRows.length === 0) {
-    // No games today — find next date
-    const futureRows = rows.filter(r => r[0] > today).sort((a,b) => a[0].localeCompare(b[0]));
-    const nextDate = futureRows.length ? futureRows[0][0] : null;
-    const nextRows = nextDate ? futureRows.filter(r => r[0] === nextDate) : [];
-    const nextLabel = nextDate ? new Date(nextDate + 'T12:00:00').toLocaleDateString([], {month:'long', day:'numeric'}) : '';
-
     html += `<div class="no-games-inline">
       <div class="no-games-main">No Games Today</div>
       <div class="no-games-sub">Rest Day</div>
     </div>`;
-
-    if (nextRows.length) {
-      html += `<div class="coming-up-header">Coming Up · ${nextLabel}</div>`;
-      nextRows.forEach(r => {
-        html += `<div class="preview-row">
-          <div>
-            <div class="preview-row-teams">${r[4]} ${r[2]} vs ${r[5]} ${r[3]}</div>
-            <div class="preview-row-phase">${getPhaseLabel(r)}</div>
-          </div>
-          <div class="preview-row-time">${getLocalTime(r[1])}</div>
-        </div>`;
-      });
-    }
   } else {
     todayRows.forEach(r => {
-      const kickoffUTC = r[1];
-      const phase      = r[6];
-      const state      = getCardState(kickoffUTC, phase);
-      const tierClass  = getTierClass(phase);
-      const localTime  = getLocalTime(kickoffUTC);
-      const broadcaster = r[9];
+      const kickoffUTC     = r[1];
+      const phase          = r[6];
+      const state          = getCardState(kickoffUTC, phase);
+      const tierClass      = getTierClass(phase);
+      const localTime      = getLocalTime(kickoffUTC);
+      const broadcaster    = r[9];
       const broadcasterUrl = r[10];
-      const phaseLabel = getPhaseLabel(r);
+      const phaseLabel     = getPhaseLabel(r);
 
       let stateClass = '';
       if (state === 'starting-soon') stateClass = 'state-starting-soon';
@@ -1374,15 +1419,14 @@ function renderSchedule(data) {
       }
 
       const isFinal = phase === 'FINAL';
-      const nameStyle = isFinal ? 'gc-team-shimmer' : '';
       const homeTeam = isFinal
-        ? `${r[4]} <span class="${nameStyle}">${r[2]}</span>`
+        ? `${r[4]} <span class="gc-team-shimmer">${r[2]}</span>`
         : `${r[4]} ${r[2]}`;
       const awayTeam = isFinal
-        ? `${r[5]} <span class="${nameStyle}">${r[3]}</span>`
+        ? `${r[5]} <span class="gc-team-shimmer">${r[3]}</span>`
         : `${r[5]} ${r[3]}`;
 
-      html += `<div class="game-card ${tierClass} ${stateClass}" onclick="window.open('${broadcasterUrl}','_blank')">
+      html += `<a class="game-card ${tierClass} ${stateClass}" href="${broadcasterUrl}" target="_blank" rel="noopener">
         <div class="gc-teams">
           <div class="gc-phase">${phaseLabel}</div>
           <div class="gc-team-name">${homeTeam}</div>
@@ -1390,12 +1434,27 @@ function renderSchedule(data) {
           <div class="gc-team-name">${awayTeam}</div>
         </div>
         <div class="gc-meta">${metaHtml}</div>
+      </a>`;
+    });
+  }
+
+  // Coming Up — always shown below today's content
+  if (nextRows.length) {
+    html += `<div class="coming-up-header">Coming Up · ${nextLabel}</div>`;
+    nextRows.forEach(r => {
+      html += `<div class="preview-row">
+        <div>
+          <div class="preview-row-teams">${r[4]} ${r[2]} vs ${r[5]} ${r[3]}</div>
+          <div class="preview-row-phase">${getPhaseLabel(r)}</div>
+        </div>
+        <div class="preview-row-time">${getLocalTime(r[1])}</div>
       </div>`;
     });
   }
 
   el.innerHTML = html;
 }
+
 
 function renderNowPlayingStrip(data) {
   const strip     = document.getElementById('nowPlayingStrip');
@@ -1462,6 +1521,67 @@ loadData();
 updateTournamentStatus();
 // Auto-refresh every 5 minutes
 setInterval(loadData, 5 * 60 * 1000);
+
+// ── PULL TO REFRESH ──
+(function() {
+  const THRESHOLD    = 80;  // px drag needed to trigger refresh
+  const indicator    = document.getElementById('ptr-indicator');
+  const label        = document.getElementById('ptr-label');
+  const arrow        = indicator.querySelector('.ptr-arrow');
+
+  let startY = 0;
+  let pulling = false;
+  let refreshing = false;
+
+  document.addEventListener('touchstart', e => {
+    // Only activate when scrolled to top
+    if (window.scrollY === 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling || refreshing) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { pulling = false; return; }
+
+    const progress = Math.min(dy / THRESHOLD, 1);
+    const height   = Math.min(dy * 0.4, 48);
+
+    indicator.classList.add('visible');
+    indicator.style.height = height + 'px';
+    arrow.style.transform  = `rotate(${progress * 180}deg)`;
+    label.textContent      = progress >= 1 ? 'Release to refresh' : 'Pull to refresh';
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!pulling || refreshing) return;
+    pulling = false;
+
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy >= THRESHOLD) {
+      // Trigger refresh
+      refreshing = true;
+      indicator.classList.add('refreshing');
+      indicator.style.height = '48px';
+      label.textContent = 'Refreshing...';
+
+      loadData().finally(() => {
+        refreshing = false;
+        indicator.classList.remove('refreshing', 'visible');
+        indicator.style.height = '0';
+        arrow.style.transform  = 'rotate(0deg)';
+        label.textContent      = 'Pull to refresh';
+      });
+    } else {
+      // Snap back without refreshing
+      indicator.classList.remove('visible');
+      indicator.style.height = '0';
+      arrow.style.transform  = 'rotate(0deg)';
+    }
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>
