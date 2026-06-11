@@ -28,6 +28,8 @@
             "Coming Up" next match day preview below today's games,
             full-brightness preview row team names,
             pull-to-refresh gesture on mobile
+  v1.7.2 — Fix game-card link styling: text-decoration none, color inherit,
+            convert anchor to div+onclick (eliminates mobile long-press underline)
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -669,6 +671,8 @@
     align-items: flex-start;
     gap: 10px;
     margin-bottom: 8px;
+    text-decoration: none;
+    color: inherit;
   }
   .gc-teams { flex: 1 1 70%; min-width: 0; }
   .gc-meta  { flex: 0 0 30%; text-align: right; padding-top: 28px; }
@@ -1038,7 +1042,7 @@
   </div>
 
   <div class="footer">
-    <div>v1.7.1 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.7.2 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1426,7 +1430,7 @@ function renderSchedule(data) {
         ? `${r[5]} <span class="gc-team-shimmer">${r[3]}</span>`
         : `${r[5]} ${r[3]}`;
 
-      html += `<a class="game-card ${tierClass} ${stateClass}" href="${broadcasterUrl}" target="_blank" rel="noopener">
+      html += `<div class="game-card ${tierClass} ${stateClass}" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="gc-teams">
           <div class="gc-phase">${phaseLabel}</div>
           <div class="gc-team-name">${homeTeam}</div>
@@ -1434,7 +1438,7 @@ function renderSchedule(data) {
           <div class="gc-team-name">${awayTeam}</div>
         </div>
         <div class="gc-meta">${metaHtml}</div>
-      </a>`;
+      </div>`;
     });
   }
 
