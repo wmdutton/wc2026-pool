@@ -33,9 +33,9 @@
   v1.7.3 — Disable iOS data detectors (format-detection meta tag) to fix
             auto-underline on team names and times
             convert anchor to div+onclick (eliminates mobile long-press underline)
-  v1.7.4 — Now Playing strip shows next 2 non-finished games of the day;
-            Starting Soon window extended to 30 min; Up Next eyebrow state;
-            GoatCounter analytics added
+  v1.7.5 — Strip: now-card-upcoming class, eyebrow-upnext (white, no dot), unified now-card-subline,
+            subline copy: "Started [t]" / "Kick off [t]" / "[t]";
+            Schedule Coming Up: 2 future match days with coming-up-date sub-labels
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -598,6 +598,7 @@
   }
   .eyebrow-live  { color: #4eb8b8; }
   .eyebrow-soon  { color: #d8c8a8; }
+  .eyebrow-upnext { color: #e8e8f0; }
 
   .now-playing-dot {
     width: 7px;
@@ -629,6 +630,10 @@
     background: rgba(216,200,168,0.07);
     border: 1px solid rgba(216,200,168,0.28);
   }
+  .now-card-upcoming {
+    background: #1a1a24;
+    border: 1px solid rgba(255,255,255,0.10);
+  }
 
   .now-card-teams {
     font-family: 'Bebas Neue', sans-serif;
@@ -655,19 +660,18 @@
     color: #4eb8b8;
     letter-spacing: 0.5px;
   }
-  .now-card-watch-soon { color: #d8c8a8; }
-  .now-card-started {
+  .now-card-live .now-card-watch     { color: #4eb8b8; }
+  .now-card-soon .now-card-watch     { color: #d8c8a8; }
+  .now-card-upcoming .now-card-watch { color: #a0a0c0; }
+  .now-card-subline {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 11px;
-    color: #a0a0c0;
     margin-top: 2px;
+    letter-spacing: 0.3px;
   }
-  .now-card-kickoff {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    color: rgba(216,200,168,0.7);
-    margin-top: 2px;
-  }
+  .now-card-live .now-card-subline     { color: #4eb8b8; }
+  .now-card-soon .now-card-subline     { color: #d8c8a8; }
+  .now-card-upcoming .now-card-subline { color: rgba(160,160,192,0.45); }
 
   /* ── GAME CARDS ── */
   .game-card {
@@ -890,6 +894,15 @@
     padding-bottom: 8px;
     background: linear-gradient(90deg, rgba(212,175,55,0.38) 0%, rgba(212,175,55,0.02) 40%, transparent 40%) bottom / 100% 1px no-repeat;
   }
+  .coming-up-date {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #c8c8d8;
+    margin: 14px 0 6px;
+  }
   .preview-row {
     display: flex;
     justify-content: space-between;
@@ -1051,7 +1064,7 @@
   </div>
 
   <div class="footer">
-    <div>v1.7.4 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.7.5 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1384,15 +1397,23 @@ function renderSchedule(data) {
   const rows = data.slice(1).filter(r => r[1] && r[1].trim() !== '');
   const todayRows = rows.filter(r => getLocalDateStr(r[1]) === today);
 
-  // Find next match day after today (always shown regardless of today's games)
+  // Find next 2 match days after today
   const futureRows = rows
     .filter(r => getLocalDateStr(r[1]) > today)
     .sort((a, b) => new Date(a[1]) - new Date(b[1]));
-  const nextDateStr = futureRows.length ? getLocalDateStr(futureRows[0][1]) : null;
-  const nextRows = nextDateStr ? futureRows.filter(r => getLocalDateStr(r[1]) === nextDateStr) : [];
-  const nextLabel = nextDateStr
-    ? new Date(futureRows[0][1]).toLocaleDateString([], { weekday: 'short', month: 'long', day: 'numeric' })
-    : '';
+
+  const nextDates = [];
+  futureRows.forEach(r => {
+    const d = getLocalDateStr(r[1]);
+    if (!nextDates.includes(d) && nextDates.length < 2) nextDates.push(d);
+  });
+
+  const nextDateGroups = nextDates.map(dateStr => ({
+    dateStr,
+    label: new Date(futureRows.find(r => getLocalDateStr(r[1]) === dateStr)[1])
+      .toLocaleDateString([], { month: 'long', day: 'numeric' }),
+    rows: futureRows.filter(r => getLocalDateStr(r[1]) === dateStr)
+  }));
 
   let html = `<div class="schedule-day-header">${new Date().toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'})}</div>`;
 
@@ -1452,16 +1473,19 @@ function renderSchedule(data) {
   }
 
   // Coming Up — always shown below today's content
-  if (nextRows.length) {
-    html += `<div class="coming-up-header">Coming Up · ${nextLabel}</div>`;
-    nextRows.forEach(r => {
-      html += `<div class="preview-row">
-        <div>
-          <div class="preview-row-teams">${r[4]} ${r[2]} vs ${r[5]} ${r[3]}</div>
-          <div class="preview-row-phase">${getPhaseLabel(r)}</div>
-        </div>
-        <div class="preview-row-time">${getLocalTime(r[1])}</div>
-      </div>`;
+  if (nextDateGroups.length) {
+    html += `<div class="coming-up-header">Coming Up</div>`;
+    nextDateGroups.forEach(group => {
+      html += `<div class="coming-up-date">${group.label}</div>`;
+      group.rows.forEach(r => {
+        html += `<div class="preview-row">
+          <div>
+            <div class="preview-row-teams">${r[4]} ${r[2]} vs ${r[5]} ${r[3]}</div>
+            <div class="preview-row-phase">${getPhaseLabel(r)}</div>
+          </div>
+          <div class="preview-row-time">${getLocalTime(r[1])}</div>
+        </div>`;
+      });
     });
   }
 
@@ -1515,8 +1539,8 @@ function renderNowPlayingStrip(data) {
     eyebrow.className = 'now-playing-eyebrow eyebrow-soon';
     eyebrow.innerHTML = `<span class="now-playing-dot dot-soon"></span> Starting Soon`;
   } else {
-    eyebrow.className = 'now-playing-eyebrow eyebrow-soon';
-    eyebrow.innerHTML = `<span class="now-playing-dot dot-soon"></span> Up Next`;
+    eyebrow.className = 'now-playing-eyebrow eyebrow-upnext';
+    eyebrow.innerHTML = `Up Next`;
   }
 
   // Cards
@@ -1529,19 +1553,19 @@ function renderNowPlayingStrip(data) {
       html += `<div class="now-card now-card-live" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
         <div class="now-card-watch">Watch on ${broadcaster}</div>
-        <div class="now-card-started">Started ${localTime}</div>
+        <div class="now-card-subline">Started ${localTime}</div>
       </div>`;
     } else if (w === 'soon') {
       html += `<div class="now-card now-card-soon" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
-        <div class="now-card-watch now-card-watch-soon">Watch on ${broadcaster}</div>
-        <div class="now-card-kickoff">Kicks off ${localTime}</div>
+        <div class="now-card-watch">Watch on ${broadcaster}</div>
+        <div class="now-card-subline">Kick off ${localTime}</div>
       </div>`;
     } else {
-      html += `<div class="now-card now-card-soon" onclick="window.open('${broadcasterUrl}','_blank')">
+      html += `<div class="now-card now-card-upcoming" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
-        <div class="now-card-watch now-card-watch-soon">Watch on ${broadcaster}</div>
-        <div class="now-card-kickoff">Kicks off ${localTime}</div>
+        <div class="now-card-watch">Watch on ${broadcaster}</div>
+        <div class="now-card-subline">${localTime}</div>
       </div>`;
     }
   });
