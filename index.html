@@ -33,6 +33,9 @@
   v1.7.3 — Disable iOS data detectors (format-detection meta tag) to fix
             auto-underline on team names and times
             convert anchor to div+onclick (eliminates mobile long-press underline)
+  v1.7.4 — Now Playing strip shows next 2 non-finished games of the day;
+            Starting Soon window extended to 30 min; Up Next eyebrow state;
+            GoatCounter analytics added
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -950,6 +953,8 @@
   #ptr-indicator.refreshing .ptr-arrow   { display: none; }
   .ptr-arrow { font-size: 16px; transition: transform 0.15s ease; }
 </style>
+  <!-- Analytics -->
+  <script data-goatcounter="https://wmdutton.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 
@@ -1046,7 +1051,7 @@
   </div>
 
   <div class="footer">
-    <div>v1.7.3 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.7.4 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1339,7 +1344,7 @@ function getCardState(kickoffUTC, phase) {
   const kickoff = new Date(kickoffUTC).getTime();
   const minsFromKickoff = (now - kickoff) / 60000;
   const isGroup = phase === 'GROUP';
-  if (minsFromKickoff < -15)                       return 'standard';
+  if (minsFromKickoff < -30)                       return 'standard';
   if (minsFromKickoff < 0)                         return 'starting-soon';
   if (minsFromKickoff < 120)                       return 'live';
   if (!isGroup && minsFromKickoff < 180)           return 'continued';
@@ -1348,7 +1353,7 @@ function getCardState(kickoffUTC, phase) {
 
 function isInStripWindow(kickoffUTC, phase) {
   const minsFromKickoff = (Date.now() - new Date(kickoffUTC).getTime()) / 60000;
-  if (minsFromKickoff >= -15 && minsFromKickoff < 0)   return 'soon';
+  if (minsFromKickoff >= -30 && minsFromKickoff < 0)   return 'soon';
   if (minsFromKickoff >= 0   && minsFromKickoff < 120) return 'live';
   return null;
 }
@@ -1471,8 +1476,28 @@ function renderNowPlayingStrip(data) {
 
   if (!data || data.length < 2) return;
 
+  const now = Date.now();
+  const todayLocal = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
+
   const rows = data.slice(1).filter(r => r[0] && r[1]);
-  const stripRows = rows.map(r => ({ row: r, window: isInStripWindow(r[1], r[6]) })).filter(x => x.window);
+
+  // All of today's games sorted chronologically
+  const todaysRows = rows
+    .filter(r => new Date(r[1]).toLocaleDateString('en-CA') === todayLocal)
+    .sort((a, b) => new Date(a[1]) - new Date(b[1]));
+
+  // A game is finished if enough time has passed since kickoff
+  const isFinished = (r) => {
+    const mins = (now - new Date(r[1]).getTime()) / 60000;
+    const isGroup = r[6] === 'GROUP';
+    return isGroup ? mins >= 120 : mins >= 180;
+  };
+
+  // Next 2 non-finished games of the day
+  const stripRows = todaysRows
+    .filter(r => !isFinished(r))
+    .slice(0, 2)
+    .map(r => ({ row: r, window: isInStripWindow(r[1], r[6]) || 'upcoming' }));
 
   if (stripRows.length === 0) {
     strip.dataset.hasCards = 'false';
@@ -1486,9 +1511,12 @@ function renderNowPlayingStrip(data) {
   if (liveCount > 0) {
     eyebrow.className = 'now-playing-eyebrow eyebrow-live';
     eyebrow.innerHTML = `<span class="now-playing-dot dot-live"></span> Now Playing`;
-  } else {
+  } else if (soonCount > 0) {
     eyebrow.className = 'now-playing-eyebrow eyebrow-soon';
     eyebrow.innerHTML = `<span class="now-playing-dot dot-soon"></span> Starting Soon`;
+  } else {
+    eyebrow.className = 'now-playing-eyebrow eyebrow-soon';
+    eyebrow.innerHTML = `<span class="now-playing-dot dot-soon"></span> Up Next`;
   }
 
   // Cards
@@ -1502,6 +1530,12 @@ function renderNowPlayingStrip(data) {
         <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
         <div class="now-card-watch">Watch on ${broadcaster}</div>
         <div class="now-card-started">Started ${localTime}</div>
+      </div>`;
+    } else if (w === 'soon') {
+      html += `<div class="now-card now-card-soon" onclick="window.open('${broadcasterUrl}','_blank')">
+        <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
+        <div class="now-card-watch now-card-watch-soon">Watch on ${broadcaster}</div>
+        <div class="now-card-kickoff">Kicks off ${localTime}</div>
       </div>`;
     } else {
       html += `<div class="now-card now-card-soon" onclick="window.open('${broadcasterUrl}','_blank')">
