@@ -36,13 +36,16 @@
   v1.7.5 — Strip: now-card-upcoming class, eyebrow-upnext (white, no dot), unified now-card-subline,
             subline copy: "Started [t]" / "Kick off [t]" / "[t]";
             Schedule Coming Up: 2 future match days with coming-up-date sub-labels
+  v1.8.0 — Pool Rankings rename (was Standings), Group Standings context rail above tab bar,
+            scores on full-time cards (HomeScore col J, AwayScore col K),
+            group table JS calculates W/D/L/GD/Pts from schedule data automatically
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
     F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
   Meta tab: A1=Last Updated label, B1=date value
   Schedule tab cols: A=Date(ref only) B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag
-    G=Phase H=Group I=GameNum J=Broadcaster K=BroadcasterURL
+    G=Phase H=Group I=GameNum J=HomeScore K=AwayScore L=Broadcaster M=BroadcasterURL
   ============================================================
 -->
 <html lang="en">
@@ -936,6 +939,139 @@
     50%       { opacity: 0.2; }
   }
 
+  /* ── CONTEXT RAIL — GROUP STANDINGS ── */
+  .context-rail {
+    display: none;
+    margin-bottom: 14px;
+  }
+  .context-rail.visible { display: block; }
+
+  .rail-divider {
+    display: none;
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 0 0 14px;
+  }
+  .rail-divider.visible { display: block; }
+
+  .groups-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .groups-eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.3), transparent);
+  }
+
+  .groups-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .groups-scroll::-webkit-scrollbar { display: none; }
+
+  .group-card {
+    background: #1a1a24;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 10px 12px;
+    min-width: 192px;
+    flex-shrink: 0;
+  }
+
+  .group-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(212,175,55,0.2);
+  }
+  .group-card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+  .group-card-status {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .status-progress { color: var(--text-muted); }
+  .status-final    { color: var(--gold); }
+
+  .group-table { width: 100%; border-collapse: collapse; }
+  .group-table th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: right;
+    padding: 0 3px 5px;
+    font-weight: 600;
+  }
+  .group-table th:first-child { text-align: left; }
+  .group-table th.pts-th { color: var(--gold); }
+  .group-table td {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e8e8f0;
+    text-align: right;
+    padding: 4px 3px;
+    line-height: 1.2;
+  }
+  .group-table td:first-child { text-align: left; padding-left: 7px; }
+  .group-table tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .group-table tr:last-child { border-bottom: none; }
+  .g-pts { color: var(--gold) !important; font-weight: 700 !important; }
+
+  /* In-progress: pulsing teal bar on top 2 */
+  .live-group .rank-1 td:first-child,
+  .live-group .rank-2 td:first-child {
+    border-left: 2px solid rgba(78,184,184,0.7);
+    padding-left: 5px;
+    animation: barPulse 2.5s ease-in-out infinite;
+  }
+  /* Final: gold 1st, silver 2nd — solid */
+  .final-group .rank-1 td:first-child {
+    border-left: 2px solid #D4AF37;
+    padding-left: 5px;
+  }
+  .final-group .rank-2 td:first-child {
+    border-left: 2px solid #C0C0C0;
+    padding-left: 5px;
+  }
+  @keyframes barPulse {
+    0%, 100% { border-left-color: rgba(78,184,184,0.9); }
+    50%       { border-left-color: rgba(78,184,184,0.2); }
+  }
+
+  /* Score on full-time cards */
+  .gc-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: #e8e8f0;
+    line-height: 1;
+    margin-bottom: 2px;
+    letter-spacing: 2px;
+  }
+
   /* ── PULL TO REFRESH ── */
   #ptr-indicator {
     display: flex;
@@ -1020,15 +1156,22 @@
     <div class="strip-scroll" id="stripCards"></div>
   </div>
 
+  <!-- CONTEXT RAIL — GROUP STANDINGS (group stage only) -->
+  <div class="rail-divider" id="railDivider"></div>
+  <div class="context-rail" id="contextRail">
+    <div class="groups-eyebrow">Group Standings</div>
+    <div class="groups-scroll" id="groupStandingsCards"></div>
+  </div>
+
   <!-- MOBILE TAB BAR -->
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Standings</button>
+    <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Pool Rankings</button>
     <button class="tab-btn" onclick="showTab('schedule')"><img src="trionda.png" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;">Schedule</button>
   </div>
 
   <!-- LEADERBOARD -->
   <div class="leaderboard" id="leaderboardSection">
-    <div class="section-header">🏆 Standings</div>
+    <div class="section-header">🏆 Pool Rankings</div>
     <div class="lb-header-row">
       <div>#</div>
       <div>Player</div>
@@ -1064,7 +1207,7 @@
   </div>
 
   <div class="footer">
-    <div>v1.7.5 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.8.0 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1088,6 +1231,7 @@ async function loadData() {
     updateStatus(leaderboardData, metaData);
     renderSchedule(scheduleData);
     renderNowPlayingStrip(scheduleData);
+    renderGroupStandings(scheduleData);
   } catch(e) {
     document.getElementById('leaderboardRows').innerHTML = `<div class="loading">⚠️ Could not load data. Make sure the sheet is set to "Anyone with the link can view".<br><br><small>${e.message}</small></div>`;
   }
@@ -1429,9 +1573,12 @@ function renderSchedule(data) {
       const state          = getCardState(kickoffUTC, phase);
       const tierClass      = getTierClass(phase);
       const localTime      = getLocalTime(kickoffUTC);
-      const broadcaster    = r[9];
-      const broadcasterUrl = r[10];
+      const homeScore      = r[9];
+      const awayScore      = r[10];
+      const broadcaster    = r[11];
+      const broadcasterUrl = r[12];
       const phaseLabel     = getPhaseLabel(r);
+      const hasScore       = homeScore !== '' && awayScore !== '';
 
       let stateClass = '';
       if (state === 'starting-soon') stateClass = 'state-starting-soon';
@@ -1439,17 +1586,19 @@ function renderSchedule(data) {
       else if (state === 'continued') stateClass = 'state-continued';
       else if (state === 'full-time') stateClass = 'state-full-time';
 
-      let metaHtml = `<div class="gc-time">${localTime}</div>`;
-      if (state === 'standard') {
-        metaHtml += `<div class="gc-net">${broadcaster}</div>`;
+      let metaHtml = '';
+      if (state === 'full-time' && hasScore) {
+        metaHtml = `<div class="gc-score">${homeScore} – ${awayScore}</div><div class="gc-net">${broadcaster}</div><div class="gc-full-time">Full Time</div>`;
+      } else if (state === 'standard') {
+        metaHtml = `<div class="gc-time">${localTime}</div><div class="gc-net">${broadcaster}</div>`;
       } else if (state === 'starting-soon') {
-        metaHtml += `<div class="gc-net gc-net-soon">${broadcaster}</div><div class="gc-soon-label">Starting Soon</div>`;
+        metaHtml = `<div class="gc-time">${localTime}</div><div class="gc-net gc-net-soon">${broadcaster}</div><div class="gc-soon-label">Starting Soon</div>`;
       } else if (state === 'live') {
-        metaHtml += `<div class="gc-watch">Watch on ${broadcaster}</div><div class="gc-live-badge"><span class="gc-live-dot"></span>LIVE</div>`;
+        metaHtml = `<div class="gc-time">${localTime}</div><div class="gc-watch">Watch on ${broadcaster}</div><div class="gc-live-badge"><span class="gc-live-dot"></span>LIVE</div>`;
       } else if (state === 'continued') {
-        metaHtml += `<div class="gc-watch">Watch on ${broadcaster}</div>`;
-      } else if (state === 'full-time') {
-        metaHtml += `<div class="gc-net">${broadcaster}</div><div class="gc-full-time">Full Time</div>`;
+        metaHtml = `<div class="gc-time">${localTime}</div><div class="gc-watch">Watch on ${broadcaster}</div>`;
+      } else {
+        metaHtml = `<div class="gc-time">${localTime}</div><div class="gc-net">${broadcaster}</div><div class="gc-full-time">Full Time</div>`;
       }
 
       const isFinal = phase === 'FINAL';
@@ -1547,8 +1696,8 @@ function renderNowPlayingStrip(data) {
   let html = '';
   stripRows.forEach(({ row: r, window: w }) => {
     const localTime = getLocalTime(r[1]);
-    const broadcaster = r[9];
-    const broadcasterUrl = r[10];
+    const broadcaster = r[11];
+    const broadcasterUrl = r[12];
     if (w === 'live') {
       html += `<div class="now-card now-card-live" onclick="window.open('${broadcasterUrl}','_blank')">
         <div class="now-card-teams">${r[4]} ${r[2]}<span class="now-card-vs">vs</span>${r[5]} ${r[3]}</div>
@@ -1578,6 +1727,107 @@ function renderNowPlayingStrip(data) {
   if (standingsActive || !document.querySelector('.tab-bar').offsetParent) {
     strip.classList.add('visible');
   }
+}
+
+function renderGroupStandings(data) {
+  const rail    = document.getElementById('contextRail');
+  const divider = document.getElementById('railDivider');
+  const cardsEl = document.getElementById('groupStandingsCards');
+
+  if (!data || data.length < 2) return;
+
+  // Only show during group stage — hide if no GROUP phase rows exist at all
+  const rows = data.slice(1).filter(r => r[1] && r[6] === 'GROUP');
+  if (rows.length === 0) return;
+
+  // Build a map of group → teams → stats
+  // Cols: 2=Home, 3=Away, 4=HomeFlag, 5=AwayFlag, 7=Group, 9=HomeScore, 10=AwayScore
+  const groups = {};
+  rows.forEach(r => {
+    const group    = r[7];
+    const home     = r[2];
+    const away     = r[3];
+    const homeFlag = r[4];
+    const awayFlag = r[5];
+    const hs       = r[9];
+    const as_      = r[10];
+
+    if (!groups[group]) groups[group] = { teams: {}, played: 0, total: 0 };
+    const g = groups[group];
+    g.total++;
+
+    // Ensure both teams exist
+    if (!g.teams[home]) g.teams[home] = { flag: homeFlag, w: 0, d: 0, l: 0, gf: 0, ga: 0 };
+    if (!g.teams[away]) g.teams[away] = { flag: awayFlag, w: 0, d: 0, l: 0, gf: 0, ga: 0 };
+
+    // Only calculate if score is entered
+    if (hs === '' || as_ === '') return;
+    const h = parseInt(hs, 10);
+    const a = parseInt(as_, 10);
+    if (isNaN(h) || isNaN(a)) return;
+
+    g.played++;
+    g.teams[home].gf += h; g.teams[home].ga += a;
+    g.teams[away].gf += a; g.teams[away].ga += h;
+
+    if (h > a) {
+      g.teams[home].w++; g.teams[away].l++;
+    } else if (h < a) {
+      g.teams[away].w++; g.teams[home].l++;
+    } else {
+      g.teams[home].d++; g.teams[away].d++;
+    }
+  });
+
+  // Sort groups alphabetically
+  const sortedGroups = Object.keys(groups).sort();
+
+  let html = '';
+  sortedGroups.forEach(groupName => {
+    const g = groups[groupName];
+    const isComplete = g.played === g.total;
+    const statusClass = isComplete ? 'status-final' : 'status-progress';
+    const statusText  = isComplete ? 'Final Standings' : `${g.played}/${g.total}`;
+    const cardClass   = isComplete ? 'final-group' : 'live-group';
+
+    // Sort teams: pts desc, then GD desc, then GF desc
+    const sorted = Object.entries(g.teams).map(([name, s]) => ({
+      name, flag: s.flag,
+      pts: s.w * 3 + s.d,
+      w: s.w, d: s.d, l: s.l,
+      gd: s.gf - s.ga, gf: s.gf
+    })).sort((a, b) =>
+      b.pts - a.pts || b.gd - a.gd || b.gf - a.gf
+    );
+
+    const rankClasses = ['rank-1', 'rank-2', '', ''];
+
+    html += `<div class="group-card ${cardClass}">
+      <div class="group-card-header">
+        <div class="group-card-title">Group ${groupName}</div>
+        <div class="group-card-status ${statusClass}">${statusText}</div>
+      </div>
+      <table class="group-table">
+        <thead><tr>
+          <th></th>
+          <th class="pts-th">Pts</th>
+          <th>W</th><th>D</th><th>L</th><th>GD</th>
+        </tr></thead>
+        <tbody>
+          ${sorted.map((t, i) => `<tr class="${rankClasses[i]}">
+            <td>${t.flag} ${t.name}</td>
+            <td class="g-pts">${t.pts}</td>
+            <td>${t.w}</td><td>${t.d}</td><td>${t.l}</td>
+            <td>${t.gd > 0 ? '+' : ''}${t.gd}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  });
+
+  cardsEl.innerHTML = html;
+  rail.classList.add('visible');
+  divider.classList.add('visible');
 }
 
 // ── END SCHEDULE ──
