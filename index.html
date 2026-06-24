@@ -39,6 +39,10 @@
   v1.8.0 — Pool Rankings rename (was Standings), Group Standings context rail above tab bar,
             scores on full-time cards (HomeScore col J, AwayScore col K),
             group table JS calculates W/D/L/GD/Pts from schedule data automatically
+  v1.9.0 — Eliminated team treatment on pick chips and collapsed row preview:
+            chip-out class (faded bg, faded label/flag), chip-eliminated-tag (muted red),
+            team name muted, pts retained; preview line strikethrough on eliminated 1st/2nd pick;
+            reads Results tab col D (Eliminated=TRUE) to build eliminatedTeams Set
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -46,6 +50,7 @@
   Meta tab: A1=Last Updated label, B1=date value
   Schedule tab cols: A=Date(ref only) B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag
     G=Phase H=Group I=GameNum J=HomeScore K=AwayScore L=Broadcaster M=BroadcasterURL
+  Results tab cols: A=TeamNumber B=Team C=RoundEliminated D=Eliminated(TRUE/blank)
   ============================================================
 -->
 <html lang="en">
@@ -446,6 +451,32 @@
     font-size: 12px;
     color: var(--gold);
     margin-top: 2px;
+  }
+
+  /* ── ELIMINATED CHIP TREATMENT ── */
+  .chip-out {
+    background: rgba(22, 22, 30, 0.5);
+    border-color: rgba(255,255,255,0.03);
+  }
+  .chip-out .pick-chip-label { opacity: 0.35; }
+  .chip-out .chip-flag { opacity: 0.3; }
+  .chip-out .pick-chip-team { color: #9090a8; }
+
+  .chip-eliminated-tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(180, 80, 80, 0.5);
+    margin-top: 3px;
+    margin-bottom: 1px;
+  }
+
+  /* Collapsed row preview — eliminated team name */
+  .preview-elim {
+    color: #505060;
+    text-decoration: line-through;
+    text-decoration-color: #404050;
   }
 
   /* ── PICKS TABLE (mobile-friendly) ── */
@@ -1222,12 +1253,28 @@ async function loadData() {
   document.getElementById('leaderboardRows').innerHTML = `<div class="loading"><div class="loading-spinner"></div>Loading standings...</div>`;
 
   try {
-    const [leaderboardData, metaData, scheduleData] = await Promise.all([
+    const [leaderboardData, metaData, scheduleData, resultsData] = await Promise.all([
       fetchSheet('Leaderboard'),
       fetchSheet('Meta'),
-      fetchSheet('Schedule')
+      fetchSheet('Schedule'),
+      fetchSheet('Results')
     ]);
-    renderLeaderboard(leaderboardData);
+
+    // Build set of eliminated team names from Results col D (Eliminated=TRUE)
+    // Col B = team name (e.g. "🇯🇴 Jordan"), col D = "TRUE" when eliminated
+    const eliminatedTeams = new Set();
+    resultsData.slice(1).forEach(row => {
+      if ((row[3] || '').trim().toUpperCase() === 'TRUE') {
+        // Strip flag emoji — match on the text name only for robustness
+        const teamCell = (row[1] || '').trim();
+        // Extract just the country name after the flag (first space-separated token is emoji)
+        const spaceIdx = teamCell.indexOf(' ');
+        const teamName = spaceIdx > -1 ? teamCell.slice(spaceIdx + 1).trim() : teamCell;
+        if (teamName) eliminatedTeams.add(teamName);
+      }
+    });
+
+    renderLeaderboard(leaderboardData, eliminatedTeams);
     updateStatus(leaderboardData, metaData);
     renderSchedule(scheduleData);
     renderNowPlayingStrip(scheduleData);
@@ -1266,7 +1313,7 @@ function parseGviz(json) {
   return data;
 }
 
-function renderLeaderboard(data) {
+function renderLeaderboard(data, eliminatedTeams = new Set()) {
   if (!data || data.length < 2) {
     document.getElementById('leaderboardRows').innerHTML = '<div class="loading">No data yet — check back after June 11!</div>';
     return;
@@ -1299,7 +1346,15 @@ function renderLeaderboard(data) {
     const t2parts = t2raw.indexOf(' ') > -1 ? [t2raw.slice(0, t2raw.indexOf(' ')), t2raw.slice(t2raw.indexOf(' ') + 1)] : ['', t2raw];
     const goldStyle = `background:linear-gradient(90deg,#b8882a 0%,#D4AF37 30%,#f5e27a 55%,#D4AF37 75%,#a87c20 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
     const silverStyle = `background:linear-gradient(90deg,#707085 0%,#b0b0c8 20%,#e8e8f4 45%,#ffffff 55%,#c0c0d8 75%,#808090 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;`;
-    const preview = `<span>${t1parts[0]} </span><span style="${goldStyle}">${t1parts[1]}</span><span style="color:#ffffff;font-weight:700;">&nbsp;&nbsp;·&nbsp;&nbsp;</span><span>${t2parts[0]} </span><span style="${silverStyle}">${t2parts[1]}</span>`;
+    const t1elim = eliminatedTeams.has(t1parts[1]);
+    const t2elim = eliminatedTeams.has(t2parts[1]);
+    const t1nameHtml = t1elim
+      ? `<span class="preview-elim">${t1parts[0]} ${t1parts[1]}</span>`
+      : `<span>${t1parts[0]} </span><span style="${goldStyle}">${t1parts[1]}</span>`;
+    const t2nameHtml = t2elim
+      ? `<span class="preview-elim">${t2parts[0]} ${t2parts[1]}</span>`
+      : `<span>${t2parts[0]} </span><span style="${silverStyle}">${t2parts[1]}</span>`;
+    const preview = `${t1nameHtml}<span style="color:#ffffff;font-weight:700;">&nbsp;&nbsp;·&nbsp;&nbsp;</span>${t2nameHtml}`;
     const botNotice = isBot ? `<div class="bot-notice">BOT — Not eligible for prize pool</div>` : '';
 
     html += `
@@ -1317,12 +1372,12 @@ function renderLeaderboard(data) {
         </div>
         <div class="picks-detail" style="grid-column:1/-1">
           <div class="picks-grid">
-            ${pickChip('🥇 1st', p1)}
-            ${pickChip('🥈 2nd', p2)}
-            ${pickChip('🥉 3rd', p3)}
-            ${pickChip('🎗️ 4th', p4)}
-            ${pickChip('💫 Debut', virgin)}
-            ${pickChip('⭐ Fan Fav', fanfav)}
+            ${pickChip('🥇 1st', p1, eliminatedTeams)}
+            ${pickChip('🥈 2nd', p2, eliminatedTeams)}
+            ${pickChip('🥉 3rd', p3, eliminatedTeams)}
+            ${pickChip('🎗️ 4th', p4, eliminatedTeams)}
+            ${pickChip('💫 Debut', virgin, eliminatedTeams)}
+            ${pickChip('⭐ Fan Fav', fanfav, eliminatedTeams)}
           </div>
         </div>
       </div>`;
@@ -1335,13 +1390,21 @@ function renderLeaderboard(data) {
   renderMobilePicks(players);
 }
 
-function pickChip(label, value) {
+function pickChip(label, value, eliminatedTeams = new Set()) {
   const parts = value.split(' - ');
   const team = parts[0] || value;
   const pts = parts[1] || '';
-  return `<div class="pick-chip">
+  // Extract country name (strip flag emoji) for elimination lookup
+  const spaceIdx = team.indexOf(' ');
+  const teamName = spaceIdx > -1 ? team.slice(spaceIdx + 1).trim() : team.trim();
+  const isElim = eliminatedTeams.has(teamName);
+  // Split flag and name for separate opacity control
+  const flagPart = spaceIdx > -1 ? team.slice(0, spaceIdx) : '';
+  const namePart = spaceIdx > -1 ? team.slice(spaceIdx + 1) : team;
+  return `<div class="pick-chip${isElim ? ' chip-out' : ''}">
     <div class="pick-chip-label">${label}</div>
-    <div class="pick-chip-team">${team}</div>
+    <div class="pick-chip-team"><span class="chip-flag">${flagPart}</span>${flagPart ? ' ' : ''}${namePart}</div>
+    ${isElim ? `<div class="chip-eliminated-tag">Eliminated</div>` : ''}
     ${pts ? `<div class="pick-chip-pts">${pts}</div>` : ''}
   </div>`;
 }
