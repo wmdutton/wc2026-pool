@@ -43,6 +43,11 @@
             chip-out class (faded bg, faded label/flag), chip-eliminated-tag (muted red),
             team name muted, pts retained; preview line strikethrough on eliminated 1st/2nd pick;
             reads Results tab col D (Eliminated=TRUE) to build eliminatedTeams Set
+  v1.9.1 — Group Standings rail: J74 sentinel check (first R32 HomeScore) replaces
+            GROUP-row existence check; rail correctly hides when knockout stage begins
+  v1.9.2 — Now Playing strip always visible on all tabs (no jump on tab switch);
+            pull-to-refresh threshold lowered to 50px; scrollY tolerance 5px for
+            consistent trigger across all tabs
   ============================================================
   SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
@@ -1238,7 +1243,7 @@
   </div>
 
   <div class="footer">
-    <div>v1.8.0 · June 2026 · Created by Mason Dutton</div>
+    <div>v1.9.2 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1495,24 +1500,20 @@ function showTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
 
-  const lb       = document.getElementById('leaderboardSection');
-  const mp       = document.getElementById('mobilePicks');
-  const sched    = document.getElementById('scheduleSection');
-  const strip    = document.getElementById('nowPlayingStrip');
+  const lb    = document.getElementById('leaderboardSection');
+  const mp    = document.getElementById('mobilePicks');
+  const sched = document.getElementById('scheduleSection');
 
   // Reset all
   lb.classList.remove('hidden');
   mp.classList.remove('visible');
   sched.classList.remove('visible');
 
-  if (tab === 'leaderboard') {
-    // strip visible if it has cards
-    if (strip.dataset.hasCards === 'true') strip.classList.add('visible');
-  } else if (tab === 'schedule') {
+  if (tab === 'schedule') {
     lb.classList.add('hidden');
     sched.classList.add('visible');
-    strip.classList.remove('visible'); // hide strip on schedule tab
   }
+  // Strip is never touched here — stays visible whenever it has cards
 }
 
 function getTournamentStatus() {
@@ -1784,12 +1785,7 @@ function renderNowPlayingStrip(data) {
 
   cardsEl.innerHTML = html;
   strip.dataset.hasCards = 'true';
-  // Only show strip if we're on the standings tab
-  const standingsActive = document.querySelector('.tab-btn.active') &&
-    document.querySelector('.tab-btn.active').textContent.includes('Standings');
-  if (standingsActive || !document.querySelector('.tab-bar').offsetParent) {
-    strip.classList.add('visible');
-  }
+  strip.classList.add('visible');
 }
 
 function renderGroupStandings(data) {
@@ -1799,9 +1795,12 @@ function renderGroupStandings(data) {
 
   if (!data || data.length < 2) return;
 
-  // Only show during group stage — hide if no GROUP phase rows exist at all
+  // Hide once knockout stage begins — J74 (data[73][9]) is the HomeScore of the
+  // first R32 game. Once it has a value, group stage is over and rail disappears.
+  const firstR32Score = data[73] && data[73][9];
+  if (firstR32Score !== '' && firstR32Score != null) return;
+
   const rows = data.slice(1).filter(r => r[1] && r[6] === 'GROUP');
-  if (rows.length === 0) return;
 
   // Build a map of group → teams → stats
   // Cols: 2=Home, 3=Away, 4=HomeFlag, 5=AwayFlag, 7=Group, 9=HomeScore, 10=AwayScore
@@ -1903,7 +1902,7 @@ setInterval(loadData, 5 * 60 * 1000);
 
 // ── PULL TO REFRESH ──
 (function() {
-  const THRESHOLD    = 80;  // px drag needed to trigger refresh
+  const THRESHOLD    = 50;  // px drag needed to trigger refresh
   const indicator    = document.getElementById('ptr-indicator');
   const label        = document.getElementById('ptr-label');
   const arrow        = indicator.querySelector('.ptr-arrow');
@@ -1913,8 +1912,8 @@ setInterval(loadData, 5 * 60 * 1000);
   let refreshing = false;
 
   document.addEventListener('touchstart', e => {
-    // Only activate when scrolled to top
-    if (window.scrollY === 0) {
+    // Only activate when scrolled to top (5px tolerance for sub-pixel rounding)
+    if (window.scrollY <= 5) {
       startY = e.touches[0].clientY;
       pulling = true;
     }
