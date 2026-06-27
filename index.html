@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.0.3
+  DUTTON RANCH WC2026 POOL — v2.0.4
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1512,7 +1512,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.0.3 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.0.4 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1543,23 +1543,40 @@ let _pathwaySavedRow = null;
 
 // ── BRACKET — maps R32 game number → full forward bracket path ──
 // Each entry: r16 = game that produces R16 opponent, qf = [2 games], sf = [4 games], final = [8 games]
+// BRACKET maps each team's R32 game number to its forward bracket path.
+// ALL values are R32 game numbers (73–88) — the schedule rows getGameByNum will look up.
+//
+// r16   = the OTHER R32 game paired in the same R16 (1 card: produces team's R16 opponent)
+// qf    = the 2 R32 games on the opposite side of the same QF (2 cards: produce QF opponent)
+// sf    = the 4 R32 games on the opposite side of the same SF (4 cards: produce SF opponent)
+// final = the 8 R32 games in the opposite SF half (8 cards)
+//
+// Bracket structure derived from Schedule col A game numbers:
+//   73+75 → R16 90 → QF 97 → SF 101
+//   74+77 → R16 89 → QF 97 → SF 101
+//   76+78 → R16 91 → QF 98 → SF 101
+//   79+80 → R16 92 → QF 98 → SF 101
+//   81+82 → R16 94 → QF 99 → SF 102
+//   83+84 → R16 93 → QF 99 → SF 102
+//   85+87 → R16 96 → QF 100 → SF 102
+//   86+88 → R16 95 → QF 100 → SF 102
 const BRACKET = {
-  73: { r16: 90, qf: [89],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
-  74: { r16: 89, qf: [90],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
-  75: { r16: 90, qf: [89],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
-  76: { r16: 91, qf: [92],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
-  77: { r16: 89, qf: [90],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
-  78: { r16: 91, qf: [92],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
-  79: { r16: 92, qf: [91],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
-  80: { r16: 92, qf: [91],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
-  81: { r16: 94, qf: [93],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
-  82: { r16: 94, qf: [93],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
-  83: { r16: 93, qf: [94],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
-  84: { r16: 93, qf: [94],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
-  85: { r16: 96, qf: [95],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
-  86: { r16: 95, qf: [96],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
-  87: { r16: 96, qf: [95],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
-  88: { r16: 95, qf: [96],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
+  73: { r16: 75,  qf: [74,77],       sf: [76,78,79,80],           final: [81,82,83,84,85,86,87,88] },
+  74: { r16: 77,  qf: [73,75],       sf: [76,78,79,80],           final: [81,82,83,84,85,86,87,88] },
+  75: { r16: 73,  qf: [74,77],       sf: [76,78,79,80],           final: [81,82,83,84,85,86,87,88] },
+  76: { r16: 78,  qf: [79,80],       sf: [73,74,75,77],           final: [81,82,83,84,85,86,87,88] },
+  77: { r16: 74,  qf: [73,75],       sf: [76,78,79,80],           final: [81,82,83,84,85,86,87,88] },
+  78: { r16: 76,  qf: [79,80],       sf: [73,74,75,77],           final: [81,82,83,84,85,86,87,88] },
+  79: { r16: 80,  qf: [76,78],       sf: [73,74,75,77],           final: [81,82,83,84,85,86,87,88] },
+  80: { r16: 79,  qf: [76,78],       sf: [73,74,75,77],           final: [81,82,83,84,85,86,87,88] },
+  81: { r16: 82,  qf: [83,84],       sf: [85,86,87,88],           final: [73,74,75,76,77,78,79,80] },
+  82: { r16: 81,  qf: [83,84],       sf: [85,86,87,88],           final: [73,74,75,76,77,78,79,80] },
+  83: { r16: 84,  qf: [81,82],       sf: [85,86,87,88],           final: [73,74,75,76,77,78,79,80] },
+  84: { r16: 83,  qf: [81,82],       sf: [85,86,87,88],           final: [73,74,75,76,77,78,79,80] },
+  85: { r16: 87,  qf: [86,88],       sf: [81,82,83,84],           final: [73,74,75,76,77,78,79,80] },
+  86: { r16: 88,  qf: [85,87],       sf: [81,82,83,84],           final: [73,74,75,76,77,78,79,80] },
+  87: { r16: 85,  qf: [86,88],       sf: [81,82,83,84],           final: [73,74,75,76,77,78,79,80] },
+  88: { r16: 86,  qf: [85,87],       sf: [81,82,83,84],           final: [73,74,75,76,77,78,79,80] },
 };
 
 const ROUND_LABELS = {
@@ -1610,11 +1627,13 @@ function openPathway(event, chipEl, teamRaw, label) {
   );
   overlay.scrollTop = 0;
   overlay.classList.add('active');
+  document.body.style.overflow = 'hidden'; // prevent body scroll bleed-through on iOS
 }
 
 function closePathway() {
   const overlay = document.getElementById('pathwayOverlay');
   overlay.classList.remove('active');
+  document.body.style.overflow = ''; // restore body scroll
 
   // Restore leaderboard scroll
   window.scrollTo(0, _pathwaySavedScrollY);
