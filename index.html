@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.0.4
+  DUTTON RANCH WC2026 POOL — v2.0.5
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1512,7 +1512,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.0.4 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.0.5 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2101,23 +2101,23 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
             <div class="path-scroll">${finalCards}</div>
           </div>`;
       }
-    } else if (!isElim && !groupComplete) {
-      // Dead-end: group in progress, R32 slot not yet populated
-      timelineInner += `<div class="path-section-label">Up Next</div>`;
-      timelineInner += `
-        <div class="path-step">
-          <div class="path-dot pending"></div>
-          <div class="path-phase-row">
-            <div class="path-phase pending">Round of 32</div>
-            <div class="path-phase-right">Qualification pending</div>
-          </div>
-          <div class="path-scroll">
-            <div class="path-card pending">
-              <div class="path-pending-text">Opponent unknown · Group stage in progress</div>
-            </div>
-          </div>
-        </div>`;
     }
+  } else if (!isElim && !groupComplete) {
+    // Dead-end: group in progress, no R32 slot populated yet
+    timelineInner += `<div class="path-section-label">Up Next</div>`;
+    timelineInner += `
+      <div class="path-step">
+        <div class="path-dot pending"></div>
+        <div class="path-phase-row">
+          <div class="path-phase pending">Round of 32</div>
+          <div class="path-phase-right">Qualification pending</div>
+        </div>
+        <div class="path-scroll">
+          <div class="path-card pending">
+            <div class="path-pending-text">Opponent unknown · Group stage in progress</div>
+          </div>
+        </div>
+      </div>`;
   }
 
   return bannerHtml +
