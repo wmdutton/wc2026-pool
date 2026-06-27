@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.0.0
+  DUTTON RANCH WC2026 POOL — v2.0.1
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1493,7 +1493,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.0.0 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.0.1 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1630,10 +1630,14 @@ function splitTeamRaw(raw) {
   return { flag: r.slice(0, spaceIdx), name: r.slice(spaceIdx + 1).trim() };
 }
 
-// ── Helper: find schedule rows by game number (col I, 1-indexed in data) ──
-// Schedule cols: A=Date B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag G=Phase H=Group I=GameNum J=HomeScore K=AwayScore
+// ── Helper: find schedule rows by game number ──
+// Group stage uses col I (index 8) for GameNum; knockout rows store it in col A (index 0)
+// Schedule cols: A=Date(ref) B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag G=Phase H=Group I=GameNum J=HomeScore K=AwayScore
 function getGameByNum(scheduleData, gameNum) {
-  return scheduleData.slice(1).find(r => String(r[8]).trim() === String(gameNum));
+  const target = String(gameNum);
+  return scheduleData.slice(1).find(r =>
+    String(r[8]).trim() === target || String(r[0]).trim() === target
+  );
 }
 
 // ── Helper: get all group games for a team ──
@@ -1641,8 +1645,8 @@ function getGroupGames(scheduleData, teamName) {
   return scheduleData.slice(1).filter(r => {
     const phase = (r[6] || '').trim().toUpperCase();
     if (phase !== 'GROUP') return false;
-    const home = splitTeamRaw(r[2]).name;
-    const away = splitTeamRaw(r[3]).name;
+    const home = (r[2] || '').trim();
+    const away = (r[3] || '').trim();
     return home === teamName || away === teamName;
   });
 }
@@ -1652,8 +1656,8 @@ function getR32Game(scheduleData, teamName) {
   return scheduleData.slice(1).find(r => {
     const phase = (r[6] || '').trim().toUpperCase();
     if (phase !== 'R32') return false;
-    const home = splitTeamRaw(r[2]).name;
-    const away = splitTeamRaw(r[3]).name;
+    const home = (r[2] || '').trim();
+    const away = (r[3] || '').trim();
     return home === teamName || away === teamName;
   });
 }
@@ -1716,7 +1720,13 @@ function groupUpcomingCard(gameRow, teamName) {
 
 // ── Helper: render a future bracket game card (opponent-producing) ──
 function futureGameCard(gameRow, tier) {
-  if (!gameRow) return '';
+  if (!gameRow) return `<div class="path-card ${tier}">
+    <div class="path-card-teams">
+      <div class="path-card-team" style="color:var(--text-muted)">TBD</div>
+      <div class="path-card-divider"></div>
+      <div class="path-card-team" style="color:var(--text-muted)">TBD</div>
+    </div>
+  </div>`;
   const homeRaw = (gameRow[2] || '').trim();
   const awayRaw = (gameRow[3] || '').trim();
   const homeScore = (gameRow[9]  || '').trim();
@@ -1869,7 +1879,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
   // ─── R32 ───
   const r32Row = getR32Game(scheduleData, teamName);
   if (r32Row) {
-    const r32GameNum = parseInt(r32Row[8], 10);
+    const r32GameNum = parseInt(r32Row[0], 10); // R32 rows store GameNum in col A (index 0)
     const r32HomeRaw = (r32Row[2] || '').trim();
     const r32AwayRaw = (r32Row[3] || '').trim();
     const r32HomeScore = (r32Row[9]  || '').trim();
