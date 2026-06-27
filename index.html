@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.0.2
+  DUTTON RANCH WC2026 POOL — v2.0.3
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1239,7 +1239,7 @@
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(160,160,192,0.5);
+    color: rgba(220,220,235,0.9);
     padding-right: 16px;
     margin-bottom: 10px;
     margin-top: 16px;
@@ -1252,7 +1252,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.07), transparent);
+    background: linear-gradient(90deg, rgba(255,255,255,0.12), transparent);
   }
   .path-step { position: relative; margin-bottom: 16px; }
   .path-step:last-child { margin-bottom: 0; }
@@ -1274,6 +1274,24 @@
   .path-dot.qf      { background: #e8a050; }
   .path-dot.sf      { background: #c0c0d0; }
   .path-dot.final   { background: #D4AF37; }
+  .path-dot.pending { background: rgba(200,200,216,0.35); border-color: rgba(200,200,216,0.5); }
+  .path-phase.pending { color: rgba(200,200,216,0.45); }
+  .path-card.pending {
+    background: rgba(200,200,216,0.09);
+    border: 1px dashed rgba(200,200,216,0.55);
+    align-items: center;
+    justify-content: center;
+    min-height: 72px;
+  }
+  .path-pending-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: rgba(200,200,216,0.75);
+    text-align: center;
+    line-height: 1.4;
+  }
   .path-phase-row {
     display: flex;
     align-items: baseline;
@@ -1494,7 +1512,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.0.2 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.0.3 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1635,9 +1653,12 @@ function splitTeamRaw(raw) {
 // Group stage uses col I (index 8) for GameNum; knockout rows store it in col A (index 0)
 // Schedule cols: A=Date(ref) B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag G=Phase H=Group I=GameNum J=HomeScore K=AwayScore
 function getGameByNum(scheduleData, gameNum) {
+  // Knockout game numbers (73–104) live exclusively in col A (r[0]).
+  // Col I (r[8]) is the group-stage GameNum column and is blank for all
+  // knockout rows — searching it finds nothing for R16/QF/SF/Final.
   const target = String(gameNum);
   return scheduleData.slice(1).find(r =>
-    String(r[8]).trim() === target || String(r[0]).trim() === target
+    String(r[0]).trim() === target
   );
 }
 
@@ -2061,6 +2082,22 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
             <div class="path-scroll">${finalCards}</div>
           </div>`;
       }
+    } else if (!isElim && !groupComplete) {
+      // Dead-end: group in progress, R32 slot not yet populated
+      timelineInner += `<div class="path-section-label">Up Next</div>`;
+      timelineInner += `
+        <div class="path-step">
+          <div class="path-dot pending"></div>
+          <div class="path-phase-row">
+            <div class="path-phase pending">Round of 32</div>
+            <div class="path-phase-right">Qualification pending</div>
+          </div>
+          <div class="path-scroll">
+            <div class="path-card pending">
+              <div class="path-pending-text">Opponent unknown · Group stage in progress</div>
+            </div>
+          </div>
+        </div>`;
     }
   }
 
