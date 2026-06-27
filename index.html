@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.0.1
+  DUTTON RANCH WC2026 POOL — v2.0.2
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1099,6 +1099,7 @@
     z-index: 200;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -1493,7 +1494,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.0.1 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.0.2 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1670,7 +1671,7 @@ function groupResultCard(gameRow, teamName) {
   const awayScore = (gameRow[10] || '').trim();
   const kickoff   = (gameRow[1]  || '').trim();
 
-  const isHome     = splitTeamRaw(homeRaw).name === teamName;
+  const isHome     = homeRaw === teamName;
   const teamScore  = isHome ? homeScore : awayScore;
   const oppScore   = isHome ? awayScore : homeScore;
   const oppRaw     = isHome ? awayRaw : homeRaw;
@@ -1703,7 +1704,7 @@ function groupUpcomingCard(gameRow, teamName) {
   const homeRaw = (gameRow[2] || '').trim();
   const awayRaw = (gameRow[3] || '').trim();
   const kickoff = (gameRow[1] || '').trim();
-  const isHome  = splitTeamRaw(homeRaw).name === teamName;
+  const isHome  = homeRaw === teamName;
   const oppRaw  = isHome ? awayRaw : homeRaw;
   const { time, date } = formatKickoff(kickoff);
 
@@ -1888,7 +1889,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
     const { time: r32Time, date: r32Date } = formatKickoff((r32Row[1] || '').trim());
 
     // Determine result from selected team's perspective
-    const r32IsHome = splitTeamRaw(r32HomeRaw).name === teamName;
+    const r32IsHome = r32HomeRaw === teamName;
     const r32OppRaw = r32IsHome ? r32AwayRaw : r32HomeRaw;
     const r32TeamScore = r32IsHome ? r32HomeScore : r32AwayScore;
     const r32OppScore  = r32IsHome ? r32AwayScore : r32HomeScore;
