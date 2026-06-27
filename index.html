@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.0.5
+  DUTTON RANCH WC2026 POOL — v2.0.6
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1512,7 +1512,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.0.5 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.0.6 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2102,9 +2102,16 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           </div>`;
       }
     }
-  } else if (!isElim && !groupComplete) {
-    // Dead-end: group in progress, no R32 slot populated yet
-    timelineInner += `<div class="path-section-label">Up Next</div>`;
+  } else if (!isElim) {
+    // Dead-end: no R32 slot populated yet (group in progress OR group done but bracket not set)
+    // "Up Next" label already emitted at ~line 1901 when !groupComplete;
+    // when groupComplete, we were under "Road So Far" so we need it here.
+    if (groupComplete) {
+      timelineInner += `<div class="path-section-label">Up Next</div>`;
+    }
+    const pendingText = groupComplete
+      ? 'Opponent unknown · R32 bracket pending'
+      : 'Opponent unknown · Group stage in progress';
     timelineInner += `
       <div class="path-step">
         <div class="path-dot pending"></div>
@@ -2114,7 +2121,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
         </div>
         <div class="path-scroll">
           <div class="path-card pending">
-            <div class="path-pending-text">Opponent unknown · Group stage in progress</div>
+            <div class="path-pending-text">${pendingText}</div>
           </div>
         </div>
       </div>`;
