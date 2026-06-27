@@ -1,62 +1,13 @@
 <!DOCTYPE html>
 <!--
-  ============================================================
-  DUTTON RANCH WORLD CUP POOL — DASHBOARD
-  ============================================================
-  v1.1 — Initial release
-  v1.2 — Null fix, eyebrow update, text-muted brightness,
-          Debut/4th emoji updates, footer versioning
-  v1.3 — 🎗️ 4th emoji (all 3 locations), trophy favicon,
-          refresh button moved to Last Updated status item,
-          footer updated (removed Google Sheets line, added version)
-  v1.4 — Player name 20px (unchanged), team names 15px, 1st pick gold /
-          2nd pick muted with white bold dot separator,
-          bot treatment (col J Is Bot), prize pool excludes bots,
-          Last Updated reads from Meta tab B1, refresh btn removed
-  v1.5 — 1st pick gold metallic shimmer gradient (flag isolated),
-          2nd pick silver metallic shimmer gradient (flag isolated),
-          flag+team spacing enforced,
-          Real Name subtitle (teal) from Leaderboard col K — blank if not set
-  v1.6 — Dynamic tournament countdown in status bar:
-          pre-tournament: label=Tournament value=Starts Jun 11,
-          during: label=Days to Final value=N,
-          post: label=Tournament value=Complete
-  v1.7 — Now Playing strip (teal/cream states), Schedule tab, Starting Soon state,
-          gentlePulse on live dot, full team names on strip cards
-  v1.7.1 — Derive schedule date from UTC timestamp (fixes UTC midnight bug),
-            FINAL card starting-soon gc-phase gold shimmer fix,
-            "Coming Up" next match day preview below today's games,
-            full-brightness preview row team names,
-            pull-to-refresh gesture on mobile
-  v1.7.2 — Fix game-card link styling: text-decoration none, color inherit,
-            convert anchor to div+onclick (eliminates mobile long-press underline)
-  v1.7.3 — Disable iOS data detectors (format-detection meta tag) to fix
-            auto-underline on team names and times
-            convert anchor to div+onclick (eliminates mobile long-press underline)
-  v1.7.5 — Strip: now-card-upcoming class, eyebrow-upnext (white, no dot), unified now-card-subline,
-            subline copy: "Started [t]" / "Kick off [t]" / "[t]";
-            Schedule Coming Up: 2 future match days with coming-up-date sub-labels
-  v1.8.0 — Pool Rankings rename (was Standings), Group Standings context rail above tab bar,
-            scores on full-time cards (HomeScore col J, AwayScore col K),
-            group table JS calculates W/D/L/GD/Pts from schedule data automatically
-  v1.9.0 — Eliminated team treatment on pick chips and collapsed row preview:
-            chip-out class (faded bg, faded label/flag), chip-eliminated-tag (muted red),
-            team name muted, pts retained; preview line strikethrough on eliminated 1st/2nd pick;
-            reads Results tab col D (Eliminated=TRUE) to build eliminatedTeams Set
-  v1.9.1 — Group Standings rail: J74 sentinel check (first R32 HomeScore) replaces
-            GROUP-row existence check; rail correctly hides when knockout stage begins
-  v1.9.2 — Now Playing strip always visible on all tabs (no jump on tab switch);
-            pull-to-refresh threshold lowered to 50px; scrollY tolerance 5px for
-            consistent trigger across all tabs
-  ============================================================
-  SHEET ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
-  Leaderboard tab cols: A=Rank B=Name C=Total D=1st E=2nd
-    F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
-  Meta tab: A1=Last Updated label, B1=date value
-  Schedule tab cols: A=Date(ref only) B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag
-    G=Phase H=Group I=GameNum J=HomeScore K=AwayScore L=Broadcaster M=BroadcasterURL
-  Results tab cols: A=TeamNumber B=Team C=RoundEliminated D=Eliminated(TRUE/blank)
-  ============================================================
+  DUTTON RANCH WC2026 POOL — v2.0.0
+  Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
+  Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
+  Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
+  Schedule cols    : A=Date(ref) B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag G=Phase H=Group I=GameNum J=HomeScore K=AwayScore L=Broadcaster M=BroadcasterURL
+  Results cols     : A=TeamNumber B=Team C=RoundEliminated D=Eliminated(TRUE/blank)
+  Meta             : A1=Last Updated label · B1=date value
+  Changelog        : CHANGELOG_v200.md (local)
 -->
 <html lang="en">
 <head>
@@ -1137,6 +1088,305 @@
   #ptr-indicator.refreshing .ptr-spinner { display: block; }
   #ptr-indicator.refreshing .ptr-arrow   { display: none; }
   .ptr-arrow { font-size: 16px; transition: transform 0.15s ease; }
+
+  /* ============================================================
+     PATHWAY OVERLAY — v2.0.0
+     ============================================================ */
+  .pathway-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #0a0a0f;
+    z-index: 200;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .pathway-overlay.active { transform: translateX(0); }
+
+  .path-player-banner {
+    display: grid;
+    grid-template-columns: 44px 1fr 70px;
+    gap: 8px;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.08), #1a1a24);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 8px;
+    margin: 12px 16px 0;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .path-player-banner::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #D4AF37;
+  }
+  .path-banner-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: #D4AF37;
+    text-align: center;
+    line-height: 1;
+  }
+  .path-banner-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #e8e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .path-banner-back {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #4eb8b8;
+    margin-top: 2px;
+  }
+  .path-banner-total { text-align: right; }
+  .path-banner-pts {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: #D4AF37;
+    line-height: 1;
+  }
+  .path-banner-pts-label {
+    font-size: 10px;
+    color: #a0a0c0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .path-rule {
+    height: 1px;
+    margin: 14px 16px 14px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
+  }
+  .path-team-header { padding: 0 16px; margin-bottom: 14px; }
+  .path-team-name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .path-flag-lg { font-size: 32px; line-height: 1; }
+  .path-flag-lg.elim { opacity: 0.35; }
+  .path-team-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+    color: #e8e8f0;
+    line-height: 1;
+  }
+  .path-team-name.elim { color: #505060; }
+  .path-sub-line {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    color: #a0a0c0;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .path-sub-sep { color: rgba(255,255,255,0.25); font-size: 10px; }
+  .path-pts-val { color: #D4AF37; font-weight: 700; }
+  .path-elim-tag {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(180,80,80,0.7);
+    margin-top: 3px;
+  }
+  .path-eyebrow-wrap { padding: 0 16px; margin-bottom: 14px; }
+  .path-eyebrow {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    color: #D4AF37;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .path-eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.5), transparent);
+  }
+  .path-timeline {
+    position: relative;
+    padding-left: 36px;
+  }
+  .path-timeline::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(255,255,255,0.1);
+  }
+  .path-section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(160,160,192,0.5);
+    padding-right: 16px;
+    margin-bottom: 10px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .path-section-label:first-child { margin-top: 0; }
+  .path-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.07), transparent);
+  }
+  .path-step { position: relative; margin-bottom: 16px; }
+  .path-step:last-child { margin-bottom: 0; }
+  .path-dot {
+    position: absolute;
+    left: -25px;
+    top: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #0a0a0f;
+    z-index: 1;
+  }
+  .path-dot.won     { background: #5db87a; }
+  .path-dot.loss    { background: rgba(180,80,80,0.6); }
+  .path-dot.ongoing { background: #4eb8b8; }
+  .path-dot.r32     { background: #c8c8d8; }
+  .path-dot.r16     { background: #d8c8a8; }
+  .path-dot.qf      { background: #e8a050; }
+  .path-dot.sf      { background: #c0c0d0; }
+  .path-dot.final   { background: #D4AF37; }
+  .path-phase-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-right: 16px;
+  }
+  .path-phase {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .path-phase.won  { color: #5db87a; }
+  .path-phase.loss { color: rgba(180,80,80,0.65); }
+  .path-phase.ongoing { color: #4eb8b8; }
+  .path-phase.r32  { color: #c8c8d8; }
+  .path-phase.r16  { color: #d8c8a8; }
+  .path-phase.qf {
+    background: linear-gradient(90deg, #c8702a 0%, #e8a050 35%, #f0b870 55%, #e8a050 75%, #b86020 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .path-phase.sf {
+    background: linear-gradient(90deg, #808090 0%, #c0c0d0 30%, #e8e8f4 55%, #c0c0d0 75%, #909098 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .path-phase.final {
+    background: linear-gradient(90deg, #8a6818 0%, #c8a830 10%, #edd97a 17%, #c8a830 24%, #8a6010 33%, #7a5808 42%, #c8a830 52%, #edd97a 59%, #c8a830 66%, #8a6818 75%, #7a5808 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .path-phase-right {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px;
+    color: rgba(160,160,192,0.55);
+  }
+  .path-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    padding-right: 16px;
+  }
+  .path-scroll::-webkit-scrollbar { display: none; }
+  .path-card {
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    flex-shrink: 0;
+    width: 160px;
+  }
+  .path-card.won   { background: rgba(80,180,110,0.04);  border: 1px solid rgba(80,180,110,0.3); }
+  .path-card.draw  { background: rgba(216,200,168,0.03); border: 1px solid rgba(216,200,168,0.25); }
+  .path-card.loss  { background: rgba(16,16,22,0.5);     border: 1px solid rgba(180,80,80,0.2); }
+  .path-card.r32   { background: #1a1a24; border: 1px solid rgba(200,200,216,0.3); }
+  .path-card.r16   { background: #1a1a24; border: 1px solid rgba(216,200,168,0.4); }
+  .path-card.qf    { background: #1a1a24; border: 1px solid rgba(232,160,80,0.45); }
+  .path-card.sf    { background: #1a1a24; border: 1px solid rgba(192,192,208,0.5); }
+  .path-card.final { background: linear-gradient(135deg, #1a1a24 0%, #1e1a10 100%); border: 1px solid rgba(212,175,55,0.7); }
+  .path-card-teams { flex: 1 1 70%; min-width: 0; }
+  .path-card-team {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e8e8f0;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .path-card-divider { height: 1px; margin: 5px 0; }
+  .path-card.won   .path-card-divider { background: linear-gradient(90deg, rgba(80,180,110,0.3), transparent 60%); }
+  .path-card.draw  .path-card-divider { background: linear-gradient(90deg, rgba(216,200,168,0.25), transparent 60%); }
+  .path-card.loss  .path-card-divider { background: linear-gradient(90deg, rgba(180,80,80,0.2), transparent 60%); }
+  .path-card.r32   .path-card-divider { background: linear-gradient(90deg, rgba(200,200,216,0.3), transparent 60%); }
+  .path-card.r16   .path-card-divider { background: linear-gradient(90deg, rgba(216,200,168,0.4), transparent 60%); }
+  .path-card.qf    .path-card-divider { background: linear-gradient(90deg, rgba(232,160,80,0.45), transparent 60%); }
+  .path-card.sf    .path-card-divider { background: linear-gradient(90deg, rgba(192,192,208,0.5), transparent 60%); }
+  .path-card.final .path-card-divider { background: linear-gradient(90deg, rgba(237,217,122,0.8), rgba(237,217,122,0.03) 40%, transparent 60%); }
+  .path-score-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 2px; }
+  .path-score-win   { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #5db87a; letter-spacing: 1px; }
+  .path-score-draw  { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #d8c8a8; letter-spacing: 1px; }
+  .path-score-loss  { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: rgba(180,80,80,0.7); letter-spacing: 1px; }
+  .path-score-sep   { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: rgba(160,160,192,0.3); }
+  .path-score-muted { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: rgba(160,160,192,0.3); letter-spacing: 1px; }
+  .path-opponent { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; color: rgba(160,160,192,0.45); }
+  .path-card-meta { flex: 0 0 auto; text-align: right; padding-top: 2px; }
+  .path-card-time { font-family: 'Bebas Neue', sans-serif; font-size: 18px; line-height: 1; margin-bottom: 3px; }
+  .path-card.r32  .path-card-time { color: #c8c8d8; }
+  .path-card.r16  .path-card-time { color: #d8c8a8; }
+  .path-card.qf   .path-card-time {
+    background: linear-gradient(90deg, #c8702a 0%, #e8a050 35%, #f0b870 55%, #e8a050 75%, #b86020 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .path-card.sf   .path-card-time {
+    background: linear-gradient(90deg, #808090 0%, #c0c0d0 30%, #e8e8f4 55%, #c0c0d0 75%, #909098 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .path-card.final .path-card-time {
+    background: linear-gradient(90deg, #b8882a 0%, #D4AF37 30%, #f5e27a 55%, #D4AF37 75%, #a87c20 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .path-card-date { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; }
+  .path-card.r32   .path-card-date { color: #c8c8d8; }
+  .path-card.r16   .path-card-date { color: #d8c8a8; }
+  .path-card.qf    .path-card-date { color: #e8a050; }
+  .path-card.sf    .path-card-date { color: #c0c0d0; }
+  .path-card.final .path-card-date { color: #e8e8f0; }
+  .path-card-date-sm { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; color: rgba(160,160,192,0.4); }
+  /* ── END PATHWAY CSS ── */
 </style>
   <!-- Analytics -->
   <script data-goatcounter="https://wmdutton.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -1243,17 +1493,575 @@
   </div>
 
   <div class="footer">
-    <div>v1.9.2 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.0.0 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
+
+<!-- PATHWAY OVERLAY — injected by openPathway() -->
+<div class="pathway-overlay" id="pathwayOverlay"></div>
 
 <script>
 const SHEET_ID = '13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA';
 const LEADERBOARD_GID = '0'; // default sheet (Leaderboard tab)
 
+// ── SECTION INDEX ────────────────────────────────────────────
+// CONSTANTS     SHEET_ID, BRACKET, ROUND_LABELS, PHASE_DATES
+// PATHWAY       openPathway · closePathway · buildPathwayHTML · helpers
+// DATA          loadData · fetchSheet · parseGviz
+// LEADERBOARD   renderLeaderboard · pickChip · togglePicks · renderPicksTable · renderMobilePicks
+// SCHEDULE      renderSchedule · renderNowPlayingStrip · renderGroupStandings
+// STATUS        updateStatus · updateTournamentStatus
+// PULL-TO-REFRESH
+// ─────────────────────────────────────────────────────────────
+
+// ── PATHWAY GLOBAL STATE ──
+let _scheduleData = [];
+let _eliminatedTeams = new Set();
+let _eliminationRoundMap = {};
+let _pathwaySavedScrollY = 0;
+let _pathwaySavedRow = null;
+
+// ── BRACKET — maps R32 game number → full forward bracket path ──
+// Each entry: r16 = game that produces R16 opponent, qf = [2 games], sf = [4 games], final = [8 games]
+const BRACKET = {
+  73: { r16: 90, qf: [89],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
+  74: { r16: 89, qf: [90],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
+  75: { r16: 90, qf: [89],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
+  76: { r16: 91, qf: [92],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
+  77: { r16: 89, qf: [90],         sf: [74,77,73,75],             final: [81,82,83,84,85,86,87,88] },
+  78: { r16: 91, qf: [92],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
+  79: { r16: 92, qf: [91],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
+  80: { r16: 92, qf: [91],         sf: [76,78,79,80],             final: [81,82,83,84,85,86,87,88] },
+  81: { r16: 94, qf: [93],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
+  82: { r16: 94, qf: [93],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
+  83: { r16: 93, qf: [94],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
+  84: { r16: 93, qf: [94],         sf: [81,82,83,84],             final: [73,74,75,76,77,78,79,80] },
+  85: { r16: 96, qf: [95],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
+  86: { r16: 95, qf: [96],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
+  87: { r16: 96, qf: [95],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
+  88: { r16: 95, qf: [96],         sf: [85,86,87,88],             final: [73,74,75,76,77,78,79,80] },
+};
+
+const ROUND_LABELS = {
+  'Group':  'Group Stage',
+  'R32':    'Round of 32',
+  'R16':    'Round of 16',
+  'QF':     'Quarter-Final',
+  'SF':     'Semi-Final',
+  'Final':  'Final',
+};
+
+// Static date strings for future phase headers (right side of phase row)
+const PHASE_DATES = {
+  group: 'Jun 12 – Jun 26',
+  r32:   'Jun 28 – Jul 2',
+  r16:   'Jul 6',
+  qf:    'Jul 11–12',
+  sf:    'Jul 14–15',
+  final: 'Jul 19',
+};
+
+
 // We'll fetch the Leaderboard tab by name using the CSV export endpoint
 // which works for public sheets without an API key
+
+// ── PATHWAY FUNCTIONS ──────────────────────────────────────────
+
+function openPathway(event, chipEl, teamRaw, label) {
+  event.stopPropagation(); // don't toggle row expansion
+
+  // Read player data from parent lb-row (Option B)
+  const row = chipEl.closest('.lb-row');
+  if (!row) return;
+  const playerRank  = row.dataset.rank  || '';
+  const playerName  = row.dataset.name  || '';
+  const playerTotal = row.dataset.total || '0';
+
+  // Save scroll + row state for restoration on close
+  _pathwaySavedScrollY = window.scrollY;
+  _pathwaySavedRow = row;
+
+  // Build and inject panel HTML
+  const overlay = document.getElementById('pathwayOverlay');
+  overlay.innerHTML = buildPathwayHTML(
+    playerRank, playerName, playerTotal,
+    teamRaw, label,
+    _scheduleData, _eliminatedTeams, _eliminationRoundMap
+  );
+  overlay.scrollTop = 0;
+  overlay.classList.add('active');
+}
+
+function closePathway() {
+  const overlay = document.getElementById('pathwayOverlay');
+  overlay.classList.remove('active');
+
+  // Restore leaderboard scroll
+  window.scrollTo(0, _pathwaySavedScrollY);
+
+  // Re-expand the saved row if it isn't already open
+  if (_pathwaySavedRow) {
+    const detail = _pathwaySavedRow.querySelector('.picks-detail');
+    if (detail && !detail.classList.contains('open')) {
+      detail.classList.add('open');
+      _pathwaySavedRow.classList.add('expanded');
+    }
+  }
+}
+
+// ── Helper: format a UTC kickoff string to local time + short date ──
+function formatKickoff(utcStr) {
+  if (!utcStr) return { time: '', date: '' };
+  try {
+    const d = new Date(utcStr);
+    const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                  .replace(':00', '').replace(' ', '\u202f'); // thin space
+    const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return { time, date };
+  } catch(e) { return { time: '', date: '' }; }
+}
+
+// ── Helper: extract flag and name from raw team string e.g. "🇺🇸 United States" ──
+function splitTeamRaw(raw) {
+  const r = (raw || '').split(' - ')[0].trim(); // strip " - pts" if present
+  const spaceIdx = r.indexOf(' ');
+  if (spaceIdx < 0) return { flag: '', name: r };
+  return { flag: r.slice(0, spaceIdx), name: r.slice(spaceIdx + 1).trim() };
+}
+
+// ── Helper: find schedule rows by game number (col I, 1-indexed in data) ──
+// Schedule cols: A=Date B=KickoffUTC C=Home D=Away E=HomeFlag F=AwayFlag G=Phase H=Group I=GameNum J=HomeScore K=AwayScore
+function getGameByNum(scheduleData, gameNum) {
+  return scheduleData.slice(1).find(r => String(r[8]).trim() === String(gameNum));
+}
+
+// ── Helper: get all group games for a team ──
+function getGroupGames(scheduleData, teamName) {
+  return scheduleData.slice(1).filter(r => {
+    const phase = (r[6] || '').trim().toUpperCase();
+    if (phase !== 'GROUP') return false;
+    const home = splitTeamRaw(r[2]).name;
+    const away = splitTeamRaw(r[3]).name;
+    return home === teamName || away === teamName;
+  });
+}
+
+// ── Helper: get team's R32 game row ──
+function getR32Game(scheduleData, teamName) {
+  return scheduleData.slice(1).find(r => {
+    const phase = (r[6] || '').trim().toUpperCase();
+    if (phase !== 'R32') return false;
+    const home = splitTeamRaw(r[2]).name;
+    const away = splitTeamRaw(r[3]).name;
+    return home === teamName || away === teamName;
+  });
+}
+
+// ── Helper: render a single result card for a played group game ──
+function groupResultCard(gameRow, teamName) {
+  const homeRaw  = (gameRow[2] || '').trim();
+  const awayRaw  = (gameRow[3] || '').trim();
+  const homeScore = (gameRow[9]  || '').trim();
+  const awayScore = (gameRow[10] || '').trim();
+  const kickoff   = (gameRow[1]  || '').trim();
+
+  const isHome     = splitTeamRaw(homeRaw).name === teamName;
+  const teamScore  = isHome ? homeScore : awayScore;
+  const oppScore   = isHome ? awayScore : homeScore;
+  const oppRaw     = isHome ? awayRaw : homeRaw;
+  const { date }   = formatKickoff(kickoff);
+
+  const ts = parseInt(teamScore, 10);
+  const os = parseInt(oppScore,  10);
+  const result = ts > os ? 'won' : ts < os ? 'loss' : 'draw';
+
+  let scoreHtml;
+  if (result === 'won') {
+    scoreHtml = `<span class="path-score-win">${teamScore}</span><span class="path-score-sep">–</span><span class="path-score-muted">${oppScore}</span>`;
+  } else if (result === 'loss') {
+    scoreHtml = `<span class="path-score-muted">${teamScore}</span><span class="path-score-sep">–</span><span class="path-score-loss">${oppScore}</span>`;
+  } else {
+    scoreHtml = `<span class="path-score-draw">${teamScore}</span><span class="path-score-sep">–</span><span class="path-score-draw">${oppScore}</span>`;
+  }
+
+  return `<div class="path-card ${result}">
+    <div class="path-card-teams">
+      <div class="path-score-row">${scoreHtml}</div>
+      <div class="path-opponent">${oppRaw}</div>
+    </div>
+    <div class="path-card-meta"><div class="path-card-date-sm">${date}</div></div>
+  </div>`;
+}
+
+// ── Helper: render an upcoming group game card ──
+function groupUpcomingCard(gameRow, teamName) {
+  const homeRaw = (gameRow[2] || '').trim();
+  const awayRaw = (gameRow[3] || '').trim();
+  const kickoff = (gameRow[1] || '').trim();
+  const isHome  = splitTeamRaw(homeRaw).name === teamName;
+  const oppRaw  = isHome ? awayRaw : homeRaw;
+  const { time, date } = formatKickoff(kickoff);
+
+  return `<div class="path-card r32">
+    <div class="path-card-teams">
+      <div class="path-card-team">${oppRaw}</div>
+    </div>
+    <div class="path-card-meta">
+      <div class="path-card-time">${time}</div>
+      <div class="path-card-date">${date}</div>
+    </div>
+  </div>`;
+}
+
+// ── Helper: render a future bracket game card (opponent-producing) ──
+function futureGameCard(gameRow, tier) {
+  if (!gameRow) return '';
+  const homeRaw = (gameRow[2] || '').trim();
+  const awayRaw = (gameRow[3] || '').trim();
+  const homeScore = (gameRow[9]  || '').trim();
+  const awayScore = (gameRow[10] || '').trim();
+  const kickoff   = (gameRow[1]  || '').trim();
+  const hasScore  = homeScore !== '' && awayScore !== '';
+  const { time, date } = formatKickoff(kickoff);
+
+  if (hasScore) {
+    // Game is complete — show result (both teams, winner implied by score)
+    const hs = parseInt(homeScore, 10);
+    const as = parseInt(awayScore, 10);
+    let dividerClass = tier;
+    return `<div class="path-card ${tier}">
+      <div class="path-card-teams">
+        <div class="path-card-team">${homeRaw}</div>
+        <div class="path-card-divider"></div>
+        <div class="path-card-team">${awayRaw}</div>
+      </div>
+      <div class="path-card-meta">
+        <div class="path-card-date">${date}</div>
+      </div>
+    </div>`;
+  } else {
+    // Future game — show both teams (or TBD placeholders from sheet)
+    return `<div class="path-card ${tier}">
+      <div class="path-card-teams">
+        <div class="path-card-team">${homeRaw}</div>
+        <div class="path-card-divider"></div>
+        <div class="path-card-team">${awayRaw}</div>
+      </div>
+      <div class="path-card-meta">
+        <div class="path-card-time">${time}</div>
+        <div class="path-card-date">${date}</div>
+      </div>
+    </div>`;
+  }
+}
+
+// ── Helper: determine group stage dot class ──
+function groupDotClass(groupGames, teamName, isElim) {
+  if (isElim) return 'loss';
+  const played = groupGames.filter(r => (r[9] || '').trim() !== '' && (r[10] || '').trim() !== '');
+  if (played.length === 0) return 'ongoing';
+  const allDone = played.length === groupGames.length;
+  if (allDone && !isElim) return 'won'; // advanced
+  return 'ongoing'; // in progress
+}
+
+// ── Main builder ──────────────────────────────────────────────
+function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, scheduleData, eliminatedTeams, eliminationRoundMap) {
+  const { flag: teamFlag, name: teamName } = splitTeamRaw(teamRaw);
+  const pts = (teamRaw.split(' - ')[1] || '').trim();
+  const isElim = eliminatedTeams.has(teamName);
+  const elimRound = eliminationRoundMap[teamName] || '';
+
+  // ── Banner ──
+  const bannerHtml = `
+    <div class="path-player-banner" onclick="closePathway()">
+      <div class="path-banner-rank">${playerRank}</div>
+      <div>
+        <div class="path-banner-name">${playerName}</div>
+        <div class="path-banner-back">← Player Picks</div>
+      </div>
+      <div class="path-banner-total">
+        <div class="path-banner-pts">${playerTotal}</div>
+        <div class="path-banner-pts-label">pts</div>
+      </div>
+    </div>`;
+
+  // ── Team header ──
+  const elimTagHtml = isElim ? `<div class="path-elim-tag">Eliminated · ${elimRound}</div>` : '';
+  const teamHeaderHtml = `
+    <div class="path-team-header">
+      <div class="path-team-name-row">
+        <span class="path-flag-lg${isElim ? ' elim' : ''}">${teamFlag}</span>
+        <span class="path-team-name${isElim ? ' elim' : ''}">${teamName}</span>
+      </div>
+      <div class="path-sub-line">
+        <span>${label}</span>
+        ${pts ? `<span class="path-sub-sep">·</span><span class="path-pts-val">${pts} pts</span>` : ''}
+      </div>
+      ${elimTagHtml}
+    </div>`;
+
+  // ── Eyebrow ──
+  const eyebrowText = isElim ? 'Tournament Run' : 'Road to the Final';
+  const eyebrowHtml = `
+    <div class="path-eyebrow-wrap">
+      <div class="path-eyebrow">${eyebrowText}</div>
+    </div>`;
+
+  // ── Timeline ──
+  let timelineInner = '';
+
+  // ─── Group Stage ───
+  const groupGames = getGroupGames(scheduleData, teamName);
+  const groupNum   = groupGames.length > 0 ? (groupGames[0][7] || '').trim() : '';
+  const groupLabel = groupNum ? `Group Stage · Group ${groupNum}` : 'Group Stage';
+  const groupDot   = groupDotClass(groupGames, teamName, isElim && elimRound === 'Group Stage');
+
+  // Determine group date range from first/last kickoff
+  const groupDates = groupGames.map(r => (r[1] || '').trim()).filter(Boolean);
+  let groupDateRange = PHASE_DATES.group;
+  if (groupDates.length >= 2) {
+    const first = formatKickoff(groupDates[0]).date;
+    const last  = formatKickoff(groupDates[groupDates.length - 1]).date;
+    groupDateRange = first && last ? `${first} – ${last}` : groupDateRange;
+  }
+
+  const groupCards = groupGames.map(g => {
+    const hasScore = (g[9] || '').trim() !== '' && (g[10] || '').trim() !== '';
+    return hasScore ? groupResultCard(g, teamName) : groupUpcomingCard(g, teamName);
+  }).join('');
+
+  // Is group phase complete? (all 3 games scored)
+  const groupComplete = groupGames.length > 0 && groupGames.every(r => (r[9]||'').trim() !== '' && (r[10]||'').trim() !== '');
+
+  // Section labels for active team
+  // Track which section we're in
+  let needsRoadSoFar   = !isElim && groupComplete; // group shown under "Road So Far" if done
+  let needsUpNext      = !isElim && !groupComplete; // group itself is "Up Next" if not done
+  let pastFirstFuture  = false;
+
+  if (isElim) {
+    // Eliminated: single "Tournament Run" label, completed phases only
+    timelineInner += `<div class="path-section-label">Tournament Run</div>`;
+  } else if (groupComplete) {
+    timelineInner += `<div class="path-section-label">Road So Far</div>`;
+  } else {
+    timelineInner += `<div class="path-section-label">Up Next</div>`;
+  }
+
+  timelineInner += `
+    <div class="path-step">
+      <div class="path-dot ${groupDot}"></div>
+      <div class="path-phase-row">
+        <div class="path-phase ${groupDot}">${groupLabel}</div>
+        <div class="path-phase-right">${groupDateRange}</div>
+      </div>
+      <div class="path-scroll">${groupCards}</div>
+    </div>`;
+
+  // If eliminated in Group Stage, stop here
+  if (isElim && elimRound === 'Group Stage') {
+    return bannerHtml + '<div class="path-rule"></div>' + teamHeaderHtml + eyebrowHtml +
+           `<div class="path-timeline">${timelineInner}</div>`;
+  }
+
+  // ─── R32 ───
+  const r32Row = getR32Game(scheduleData, teamName);
+  if (r32Row) {
+    const r32GameNum = parseInt(r32Row[8], 10);
+    const r32HomeRaw = (r32Row[2] || '').trim();
+    const r32AwayRaw = (r32Row[3] || '').trim();
+    const r32HomeScore = (r32Row[9]  || '').trim();
+    const r32AwayScore = (r32Row[10] || '').trim();
+    const r32HasScore  = r32HomeScore !== '' && r32AwayScore !== '';
+    const { time: r32Time, date: r32Date } = formatKickoff((r32Row[1] || '').trim());
+
+    // Determine result from selected team's perspective
+    const r32IsHome = splitTeamRaw(r32HomeRaw).name === teamName;
+    const r32OppRaw = r32IsHome ? r32AwayRaw : r32HomeRaw;
+    const r32TeamScore = r32IsHome ? r32HomeScore : r32AwayScore;
+    const r32OppScore  = r32IsHome ? r32AwayScore : r32HomeScore;
+
+    let r32CardClass, r32DotClass, r32PhaseClass;
+    if (r32HasScore) {
+      const ts = parseInt(r32TeamScore, 10);
+      const os = parseInt(r32OppScore,  10);
+      r32CardClass = ts > os ? 'won' : ts < os ? 'loss' : 'draw';
+      r32DotClass  = r32CardClass;
+      r32PhaseClass = r32CardClass;
+    } else {
+      r32CardClass  = 'r32';
+      r32DotClass   = groupComplete ? 'ongoing' : 'r32';
+      r32PhaseClass = 'r32';
+    }
+
+    // Section label logic
+    if (!isElim) {
+      if (groupComplete && !r32HasScore) {
+        timelineInner += `<div class="path-section-label">Up Next</div>`;
+      } else if (r32HasScore && !isElim) {
+        // r32 was played — still under "Road So Far", no new label needed
+      }
+    }
+
+    let r32CardHtml;
+    if (r32HasScore) {
+      // Show as result card
+      let scoreHtml;
+      const ts = parseInt(r32TeamScore, 10);
+      const os = parseInt(r32OppScore,  10);
+      if (ts > os) {
+        scoreHtml = `<span class="path-score-win">${r32TeamScore}</span><span class="path-score-sep">–</span><span class="path-score-muted">${r32OppScore}</span>`;
+      } else if (ts < os) {
+        scoreHtml = `<span class="path-score-muted">${r32TeamScore}</span><span class="path-score-sep">–</span><span class="path-score-loss">${r32OppScore}</span>`;
+      } else {
+        scoreHtml = `<span class="path-score-draw">${r32TeamScore}</span><span class="path-score-sep">–</span><span class="path-score-draw">${r32OppScore}</span>`;
+      }
+      r32CardHtml = `<div class="path-card ${r32CardClass}">
+        <div class="path-card-teams">
+          <div class="path-score-row">${scoreHtml}</div>
+          <div class="path-opponent">${r32OppRaw}</div>
+        </div>
+        <div class="path-card-meta"><div class="path-card-date-sm">${r32Date}</div></div>
+      </div>`;
+    } else {
+      // Upcoming — show opponent only (no divider, no selected team)
+      r32CardHtml = `<div class="path-card r32">
+        <div class="path-card-teams">
+          <div class="path-card-team">${r32OppRaw}</div>
+        </div>
+        <div class="path-card-meta">
+          <div class="path-card-time">${r32Time}</div>
+          <div class="path-card-date">${r32Date}</div>
+        </div>
+      </div>`;
+    }
+
+    timelineInner += `
+      <div class="path-step">
+        <div class="path-dot ${r32DotClass}"></div>
+        <div class="path-phase-row">
+          <div class="path-phase ${r32PhaseClass}">Round of 32</div>
+          <div class="path-phase-right">${r32HasScore ? r32Date : `Up next · ${r32Date}`}</div>
+        </div>
+        <div class="path-scroll">${r32CardHtml}</div>
+      </div>`;
+
+    // If eliminated in R32, stop here
+    if (isElim && elimRound === 'Round of 32') {
+      return bannerHtml + '<div class="path-rule"></div>' + teamHeaderHtml + eyebrowHtml +
+             `<div class="path-timeline">${timelineInner}</div>`;
+    }
+
+    // ─── Future bracket phases (R16, QF, SF, Final) for active teams ───
+    if (!isElim) {
+      const bracketPath = BRACKET[r32GameNum];
+      if (bracketPath) {
+
+        // R16
+        const r16Row = getGameByNum(scheduleData, bracketPath.r16);
+        const r16HasScore = r16Row && (r16Row[9]||'').trim() !== '' && (r16Row[10]||'').trim() !== '';
+        const r16IsComplete = r16HasScore;
+
+        if (!r32HasScore) {
+          // R32 not played yet — R16+ are Possible Future Opponents
+          if (!pastFirstFuture) {
+            timelineInner += `<div class="path-section-label">Possible Future Opponents</div>`;
+            pastFirstFuture = true;
+          }
+        } else if (r16IsComplete) {
+          // R16 played — still Road So Far, no new label
+        } else if (r32HasScore && !r16IsComplete) {
+          timelineInner += `<div class="path-section-label">Up Next</div>`;
+        }
+
+        const r16DotClass = r16IsComplete ? 'won' : (r32HasScore ? 'ongoing' : 'r16');
+        const r16PhaseClass = r16IsComplete ? 'won' : 'r16';
+        timelineInner += `
+          <div class="path-step">
+            <div class="path-dot ${r16DotClass}"></div>
+            <div class="path-phase-row">
+              <div class="path-phase ${r16PhaseClass}">Round of 16</div>
+              <div class="path-phase-right">${r16IsComplete && r16Row ? formatKickoff(r16Row[1]).date : PHASE_DATES.r16}</div>
+            </div>
+            <div class="path-scroll">${futureGameCard(r16Row, r16IsComplete ? 'won' : 'r16')}</div>
+          </div>`;
+
+        if (isElim && elimRound === 'Round of 16') {
+          return bannerHtml + '<div class="path-rule"></div>' + teamHeaderHtml + eyebrowHtml +
+                 `<div class="path-timeline">${timelineInner}</div>`;
+        }
+
+        // QF
+        if (!pastFirstFuture && !r16IsComplete) {
+          timelineInner += `<div class="path-section-label">Possible Future Opponents</div>`;
+          pastFirstFuture = true;
+        }
+        const qfCards = (bracketPath.qf || []).map(gn => {
+          const gr = getGameByNum(scheduleData, gn);
+          const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
+          return futureGameCard(gr, done ? 'won' : 'qf');
+        }).join('');
+        const qfDotClass = r16IsComplete ? 'ongoing' : 'qf';
+        timelineInner += `
+          <div class="path-step">
+            <div class="path-dot ${qfDotClass}"></div>
+            <div class="path-phase-row">
+              <div class="path-phase qf">Quarter-Final</div>
+              <div class="path-phase-right">${PHASE_DATES.qf}</div>
+            </div>
+            <div class="path-scroll">${qfCards}</div>
+          </div>`;
+
+        // SF
+        if (!pastFirstFuture) {
+          timelineInner += `<div class="path-section-label">Possible Future Opponents</div>`;
+          pastFirstFuture = true;
+        }
+        const sfCards = (bracketPath.sf || []).map(gn => {
+          const gr = getGameByNum(scheduleData, gn);
+          const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
+          return futureGameCard(gr, done ? 'won' : 'sf');
+        }).join('');
+        timelineInner += `
+          <div class="path-step">
+            <div class="path-dot sf"></div>
+            <div class="path-phase-row">
+              <div class="path-phase sf">Semi-Final</div>
+              <div class="path-phase-right">${PHASE_DATES.sf}</div>
+            </div>
+            <div class="path-scroll">${sfCards}</div>
+          </div>`;
+
+        // Final
+        const finalCards = (bracketPath.final || []).map(gn => {
+          const gr = getGameByNum(scheduleData, gn);
+          const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
+          return futureGameCard(gr, done ? 'won' : 'final');
+        }).join('');
+        timelineInner += `
+          <div class="path-step">
+            <div class="path-dot final"></div>
+            <div class="path-phase-row">
+              <div class="path-phase final">Final</div>
+              <div class="path-phase-right">${PHASE_DATES.final}</div>
+            </div>
+            <div class="path-scroll">${finalCards}</div>
+          </div>`;
+      }
+    }
+  }
+
+  return bannerHtml +
+    '<div class="path-rule"></div>' +
+    teamHeaderHtml +
+    eyebrowHtml +
+    `<div class="path-timeline" style="padding-bottom:32px">${timelineInner}</div>`;
+}
+
+// ── END PATHWAY FUNCTIONS ──────────────────────────────────────
+
 async function loadData() {
   document.getElementById('leaderboardRows').innerHTML = `<div class="loading"><div class="loading-spinner"></div>Loading standings...</div>`;
 
@@ -1266,18 +2074,26 @@ async function loadData() {
     ]);
 
     // Build set of eliminated team names from Results col D (Eliminated=TRUE)
-    // Col B = team name (e.g. "🇯🇴 Jordan"), col D = "TRUE" when eliminated
+    // Col B = team name, col C = RoundEliminated, col D = "TRUE" when eliminated
     const eliminatedTeams = new Set();
+    const eliminationRoundMap = {};
     resultsData.slice(1).forEach(row => {
       if ((row[3] || '').trim().toUpperCase() === 'TRUE') {
-        // Strip flag emoji — match on the text name only for robustness
         const teamCell = (row[1] || '').trim();
-        // Extract just the country name after the flag (first space-separated token is emoji)
         const spaceIdx = teamCell.indexOf(' ');
         const teamName = spaceIdx > -1 ? teamCell.slice(spaceIdx + 1).trim() : teamCell;
-        if (teamName) eliminatedTeams.add(teamName);
+        if (teamName) {
+          eliminatedTeams.add(teamName);
+          const roundCode = (row[2] || '').trim();
+          eliminationRoundMap[teamName] = ROUND_LABELS[roundCode] || roundCode;
+        }
       }
     });
+
+    // Store globally for pathway panel access
+    _scheduleData = scheduleData;
+    _eliminatedTeams = eliminatedTeams;
+    _eliminationRoundMap = eliminationRoundMap;
 
     renderLeaderboard(leaderboardData, eliminatedTeams);
     updateStatus(leaderboardData, metaData);
@@ -1363,7 +2179,7 @@ function renderLeaderboard(data, eliminatedTeams = new Set()) {
     const botNotice = isBot ? `<div class="bot-notice">BOT — Not eligible for prize pool</div>` : '';
 
     html += `
-      <div class="lb-row ${rankClass} ${botClass}" onclick="togglePicks(this)">
+      <div class="lb-row ${rankClass} ${botClass}" onclick="togglePicks(this)" data-rank="${rank}" data-name="${(name).replace(/"/g, '&quot;')}" data-total="${total}">
         <div class="rank-num">${rank}</div>
         <div class="player-info">
           <div class="player-name">${name}</div>
@@ -1406,7 +2222,7 @@ function pickChip(label, value, eliminatedTeams = new Set()) {
   // Split flag and name for separate opacity control
   const flagPart = spaceIdx > -1 ? team.slice(0, spaceIdx) : '';
   const namePart = spaceIdx > -1 ? team.slice(spaceIdx + 1) : team;
-  return `<div class="pick-chip${isElim ? ' chip-out' : ''}">
+  return `<div class="pick-chip${isElim ? ' chip-out' : ''}" onclick="openPathway(event, this, '${value.replace(/'/g, "\\'")}', '${label.replace(/'/g, "\\'")}')">
     <div class="pick-chip-label">${label}</div>
     <div class="pick-chip-team"><span class="chip-flag">${flagPart}</span>${flagPart ? ' ' : ''}${namePart}</div>
     ${isElim ? `<div class="chip-eliminated-tag">Eliminated</div>` : ''}
