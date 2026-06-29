@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.2
+  DUTTON RANCH WC2026 POOL — v2.1.3
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -226,7 +226,18 @@
     background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
   }
 
-  /* ── LEADERBOARD ── */
+  /* ── Sticky leaderboard header (mobile only) ── */
+  @media (max-width: 600px) {
+    .lb-sticky-header {
+      position: sticky;
+      top: 60px; /* tab bar height (~36px) + tab bar margin-bottom (24px) */
+      z-index: 90;
+      background: var(--dark-2);
+      padding-top: 4px;
+      margin-bottom: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+  }
   .leaderboard {
     margin-bottom: 48px;
     opacity: 0;
@@ -1376,11 +1387,12 @@
     -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
     padding-right: 16px;
+    align-items: stretch;
   }
   .path-scroll::-webkit-scrollbar { display: none; }
   /* ── Card wrapper — gradient border technique ── */
   /* Wrapper holds the border gradient; inner card holds background content */
-  .path-card-wrap { flex-shrink: 0; width: 160px; border-radius: 9px; padding: 1px; box-sizing: border-box; }
+  .path-card-wrap { flex-shrink: 0; width: 160px; border-radius: 9px; padding: 1px; box-sizing: border-box; display: flex; }
   /* Result cards (won/draw/loss) — solid borders, no wrapper needed, keep as .path-card */
   .path-card {
     border-radius: 8px;
@@ -1390,7 +1402,6 @@
     gap: 10px;
     flex-shrink: 0;
     width: 160px;
-    min-height: 71px;
     box-sizing: border-box;
   }
   .path-card.won   { background: rgba(80,180,110,0.04);  border: 1px solid rgba(80,180,110,0.3); }
@@ -1402,7 +1413,7 @@
   .path-card-wrap.qf    { background: linear-gradient(135deg, #c8702a 0%, #e8a050 30%, #f0b870 50%, #e8a050 70%, #b86020 100%); }
   .path-card-wrap.sf    { background: linear-gradient(135deg, #707085 0%, #b0b0c8 25%, #e8e8f4 50%, #ffffff 55%, #c0c0d8 75%, #808090 100%); }
   .path-card-wrap.final { background: linear-gradient(135deg, #8a6818 0%, #c8a830 12%, #edd97a 20%, #c8a830 28%, #8a6010 40%, #c8a830 55%, #edd97a 65%, #c8a830 75%, #8a6818 100%); }
-  /* Inner card */
+  /* Inner card — fills wrapper height dynamically */
   .path-card-inner {
     border-radius: 8px;
     padding: 10px 12px;
@@ -1410,15 +1421,15 @@
     align-items: flex-start;
     gap: 10px;
     width: 100%;
+    flex: 1;
     box-sizing: border-box;
-    min-height: 71px;
   }
   .path-card-wrap.r32   .path-card-inner { background: #1a1a24; }
   .path-card-wrap.r16   .path-card-inner { background: #1a1a24; }
   .path-card-wrap.qf    .path-card-inner { background: #1a1a24; }
   .path-card-wrap.sf    .path-card-inner { background: #1a1a24; }
   .path-card-wrap.final .path-card-inner { background: linear-gradient(135deg, #1a1a24 0%, #1e1a10 100%); }
-  /* Settled variant — vertically centered content */
+  /* Settled variant — vertically centered content, same backgrounds as unplayed */
   .path-card-inner.settled { align-items: center; }
   .path-card-teams { flex: 1 1 0; min-width: 0; }
   .path-card-team {
@@ -1553,11 +1564,13 @@
 
   <!-- LEADERBOARD -->
   <div class="leaderboard" id="leaderboardSection">
-    <div class="section-header">🏆 Pool Rankings</div>
-    <div class="lb-header-row">
-      <div>#</div>
-      <div>Player</div>
-      <div style="text-align:right">Total</div>
+    <div class="lb-sticky-header">
+      <div class="section-header">🏆 Pool Rankings</div>
+      <div class="lb-header-row">
+        <div>#</div>
+        <div>Player</div>
+        <div style="text-align:right">Total</div>
+      </div>
     </div>
     <div id="leaderboardRows">
       <div class="loading">
@@ -1589,7 +1602,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.2 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.3 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2536,7 +2549,7 @@ function getCardState(kickoffUTC, phase) {
   if (minsFromKickoff < -30)                       return 'standard';
   if (minsFromKickoff < 0)                         return 'starting-soon';
   if (minsFromKickoff < 120)                       return 'live';
-  if (!isGroup && minsFromKickoff < 180)           return 'continued';
+  if (!isGroup && minsFromKickoff < 150)           return 'continued';
   return 'full-time';
 }
 
@@ -2695,7 +2708,7 @@ function renderNowPlayingStrip(data) {
   const isFinished = (r) => {
     const mins = (now - new Date(r[1]).getTime()) / 60000;
     const isGroup = r[6] === 'GROUP';
-    return isGroup ? mins >= 120 : mins >= 180;
+    return isGroup ? mins >= 120 : mins >= 150;
   };
 
   // Next 2 non-finished games of the day
