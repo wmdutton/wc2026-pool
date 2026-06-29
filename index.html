@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.0.8
+  DUTTON RANCH WC2026 POOL — v2.1.0
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1555,7 +1555,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.0.8 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.0 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2083,7 +2083,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
               <div class="path-phase ${r16PhaseClass}">Round of 16</div>
               <div class="path-phase-right">${r16IsComplete && r16Row ? formatKickoff(r16Row[1]).date : PHASE_DATES.r16}</div>
             </div>
-            <div class="path-scroll">${futureGameCard(r16Row, r16IsComplete ? 'won' : 'r16')}</div>
+            <div class="path-scroll">${futureGameCard(r16Row, r16IsComplete ? 'settled' : 'r16')}</div>
           </div>`;
 
         if (isElim && elimRound === 'Round of 16') {
@@ -2099,7 +2099,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
         const qfCards = (bracketPath.qf || []).map(gn => {
           const gr = getGameByNum(scheduleData, gn);
           const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, done ? 'won' : 'qf');
+          return futureGameCard(gr, done ? 'settled' : 'qf');
         }).join('');
         const qfDotClass = r16IsComplete ? 'ongoing' : 'qf';
         timelineInner += `
@@ -2120,7 +2120,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
         const sfCards = (bracketPath.sf || []).map(gn => {
           const gr = getGameByNum(scheduleData, gn);
           const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, done ? 'won' : 'sf');
+          return futureGameCard(gr, done ? 'settled' : 'sf');
         }).join('');
         timelineInner += `
           <div class="path-step">
@@ -2136,7 +2136,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
         const finalCards = (bracketPath.final || []).map(gn => {
           const gr = getGameByNum(scheduleData, gn);
           const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, done ? 'won' : 'final');
+          return futureGameCard(gr, done ? 'settled' : 'final');
         }).join('');
         timelineInner += `
           <div class="path-step">
