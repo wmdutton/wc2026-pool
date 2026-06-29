@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.0
+  DUTTON RANCH WC2026 POOL — v2.1.1
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -530,6 +530,10 @@
   .tab-bar {
     display: none;
     margin-bottom: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--dark-2);
   }
 
   @media (max-width: 600px) {
@@ -1376,7 +1380,7 @@
   .path-card-teams { flex: 1 1 70%; min-width: 0; }
   .path-card-team {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 600;
     color: #e8e8f0;
     line-height: 1.3;
@@ -1446,7 +1450,7 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 10px;
     color: rgba(160,160,192,0.3);
-    margin-top: 4px;
+    margin-top: 2px;
   }
   /* ── END PATHWAY CSS ── */
 </style>
@@ -1555,7 +1559,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.0 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.1 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
