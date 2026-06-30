@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.3
+  DUTTON RANCH WC2026 POOL — v2.1.4
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -226,11 +226,59 @@
     background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
   }
 
+  /* ── Bottom nav bar (mobile only) — appears once top tab bar scrolls out of view ── */
+  .bottom-nav-bar {
+    display: none;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: 36px;
+    background: #0d0d15;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    z-index: 150;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+  .bottom-nav-bar.visible { transform: translateY(0); }
+  @media (max-width: 600px) {
+    .bottom-nav-bar { display: flex; }
+  }
+  .bottom-nav-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(160,160,192,0.4);
+    position: relative;
+  }
+  .bottom-nav-btn.active { color: var(--gold); }
+  .bottom-nav-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 16px; right: 16px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
+  }
+  .bottom-nav-sep {
+    width: 1px;
+    background: rgba(255,255,255,0.06);
+    align-self: stretch;
+    margin: 6px 0;
+  }
+  .bottom-nav-icon { font-size: 12px; line-height: 1; }
+
   /* ── Sticky leaderboard header (mobile only) ── */
   @media (max-width: 600px) {
     .lb-sticky-header {
       position: sticky;
-      top: 60px; /* tab bar height (~36px) + tab bar margin-bottom (24px) */
+      top: 40px; /* flush under the top tab bar (no margin gap) */
       z-index: 90;
       background: var(--dark-2);
       padding-top: 4px;
@@ -523,6 +571,10 @@
     text-transform: uppercase;
   }
 
+  @media (max-width: 600px) {
+    .footer { padding-bottom: 48px; }
+  }
+
 
   /* ── ANIMATIONS ── */
   @keyframes fadeUp {
@@ -540,7 +592,7 @@
 
   .tab-bar {
     display: none;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -1557,9 +1609,20 @@
   </div>
 
   <!-- MOBILE TAB BAR -->
-  <div class="tab-bar">
-    <button class="tab-btn active" onclick="showTab('leaderboard')">🏆 Pool Rankings</button>
-    <button class="tab-btn" onclick="showTab('schedule')"><img src="trionda.png" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;">Schedule</button>
+  <div class="tab-bar" id="topTabBar">
+    <button class="tab-btn active" onclick="setActiveTab('leaderboard')">🏆 Pool Rankings</button>
+    <button class="tab-btn" onclick="setActiveTab('schedule')"><img src="trionda.png" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;">Schedule</button>
+  </div>
+
+  <!-- BOTTOM NAV BAR (mobile only, appears once top tab bar scrolls out of view) -->
+  <div class="bottom-nav-bar" id="bottomNavBar">
+    <button class="bottom-nav-btn active" data-tab="leaderboard" onclick="setActiveTab('leaderboard')">
+      <span class="bottom-nav-icon">🏆</span> Rankings
+    </button>
+    <div class="bottom-nav-sep"></div>
+    <button class="bottom-nav-btn" data-tab="schedule" onclick="setActiveTab('schedule')">
+      <img src="trionda.png" style="width:13px;height:13px;" class="bottom-nav-icon"> Schedule
+    </button>
   </div>
 
   <!-- LEADERBOARD -->
@@ -1602,7 +1665,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.3 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.4 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2121,8 +2184,8 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           timelineInner += `<div class="path-section-label">Up Next</div>`;
         }
 
-        const r16DotClass = r16IsComplete ? 'won' : (r32HasScore ? 'ongoing' : 'r16');
-        const r16PhaseClass = r16IsComplete ? 'won' : 'r16';
+        const r16DotClass = 'r16';
+        const r16PhaseClass = 'r16';
         timelineInner += `
           <div class="path-step">
             <div class="path-dot ${r16DotClass}"></div>
@@ -2130,7 +2193,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
               <div class="path-phase ${r16PhaseClass}">Round of 16</div>
               <div class="path-phase-right">${r16IsComplete && r16Row ? formatKickoff(r16Row[1]).date : PHASE_DATES.r16}</div>
             </div>
-            <div class="path-scroll">${futureGameCard(r16Row, r16IsComplete ? 'settled' : 'r16')}</div>
+            <div class="path-scroll">${futureGameCard(r16Row, 'r16')}</div>
           </div>`;
 
         if (isElim && elimRound === 'Round of 16') {
@@ -2146,9 +2209,9 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
         const qfCards = (bracketPath.qf || []).map(gn => {
           const gr = getGameByNum(scheduleData, gn);
           const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, done ? 'settled' : 'qf');
+          return futureGameCard(gr, 'qf');
         }).join('');
-        const qfDotClass = r16IsComplete ? 'ongoing' : 'qf';
+        const qfDotClass = 'qf';
         timelineInner += `
           <div class="path-step">
             <div class="path-dot ${qfDotClass}"></div>
@@ -2167,7 +2230,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
         const sfCards = (bracketPath.sf || []).map(gn => {
           const gr = getGameByNum(scheduleData, gn);
           const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, done ? 'settled' : 'sf');
+          return futureGameCard(gr, 'sf');
         }).join('');
         timelineInner += `
           <div class="path-step">
@@ -2183,7 +2246,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
         const finalCards = (bracketPath.final || []).map(gn => {
           const gr = getGameByNum(scheduleData, gn);
           const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, done ? 'settled' : 'final');
+          return futureGameCard(gr, 'final');
         }).join('');
         timelineInner += `
           <div class="path-step">
@@ -2477,9 +2540,14 @@ function updateStatus(data, metaData) {
   document.getElementById('statUpdated').textContent = lastUpdated;
 }
 
-function showTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+function setActiveTab(tab) {
+  // Sync active state across BOTH bars
+  document.querySelectorAll('.tab-bar .tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'leaderboard') || (i === 1 && tab === 'schedule'));
+  });
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
 
   const lb    = document.getElementById('leaderboardSection');
   const mp    = document.getElementById('mobilePicks');
@@ -2496,6 +2564,23 @@ function showTab(tab) {
   }
   // Strip is never touched here — stays visible whenever it has cards
 }
+
+// ── Bottom nav bar visibility — appears once top tab bar scrolls out of view ──
+(function initBottomNavObserver() {
+  const topBar = document.getElementById('topTabBar');
+  const bottomBar = document.getElementById('bottomNavBar');
+  if (!topBar || !bottomBar) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        bottomBar.classList.toggle('visible', !entry.isIntersecting);
+      });
+    },
+    { threshold: 0 }
+  );
+  observer.observe(topBar);
+})();
 
 function getTournamentStatus() {
   const now = new Date();
