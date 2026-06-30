@@ -502,8 +502,6 @@
   /* Collapsed row preview — eliminated team name */
   .preview-elim {
     color: #505060;
-    text-decoration: line-through;
-    text-decoration-color: #404050;
   }
 
   /* ── PICKS TABLE (mobile-friendly) ── */
@@ -1976,7 +1974,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           <span class="path-team-name-compact${isElim ? ' elim' : ''}">${teamName}</span>
           <div class="path-pick-badge">
             ${label}
-            ${pts ? `<span class="pts">${pts} pts</span>` : ''}
+            ${pts ? `<span class="pts">${pts}</span>` : ''}
           </div>
         </div>
         ${isElim ? `<div class="path-elim-tag">Eliminated · ${elimRound}</div>` : ''}
