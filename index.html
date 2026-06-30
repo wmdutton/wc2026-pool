@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.8
+  DUTTON RANCH WC2026 POOL — v2.1.9.1
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -257,7 +257,7 @@
   }
   .bottom-nav-icon { font-size: 16px; line-height: 1; }
 
-  /* ── Sticky leaderboard column header (mobile only) — collapses section header into a gold eyebrow ── */
+  /* ── Sticky leaderboard column header (mobile only) ── */
   @media (max-width: 600px) {
     .lb-sticky-eyebrow {
       font-family: 'Barlow Condensed', sans-serif;
@@ -268,6 +268,14 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.15s ease, opacity 0.15s ease;
+    }
+    .lb-sticky-eyebrow.active {
+      max-height: 24px;
+      opacity: 1;
       margin-bottom: 8px;
     }
     .lb-sticky-eyebrow::after {
@@ -1432,8 +1440,8 @@
   .path-card.draw  { background: rgba(216,200,168,0.03); border: 1px solid rgba(216,200,168,0.25); }
   .path-card.loss  { background: rgba(16,16,22,0.5);     border: 1px solid rgba(180,80,80,0.2); }
   /* Wrapper border gradients */
-  .path-card-wrap.r32   { background: rgba(200,200,216,0.3); }
-  .path-card-wrap.r16   { background: rgba(216,200,168,0.4); }
+  .path-card-wrap.r32   { background: linear-gradient(135deg, #8a8a9c 0%, #c8c8d8 30%, #e8e8f0 50%, #c8c8d8 70%, #75758a 100%); }
+  .path-card-wrap.r16   { background: linear-gradient(135deg, #a8966e 0%, #d8c8a8 30%, #f0e6d0 50%, #d8c8a8 70%, #93805a 100%); }
   .path-card-wrap.qf    { background: linear-gradient(135deg, #c8702a 0%, #e8a050 30%, #f0b870 50%, #e8a050 70%, #b86020 100%); }
   .path-card-wrap.sf    { background: linear-gradient(135deg, #707085 0%, #b0b0c8 25%, #e8e8f4 50%, #ffffff 55%, #c0c0d8 75%, #808090 100%); }
   .path-card-wrap.final { background: linear-gradient(135deg, #8a6818 0%, #c8a830 12%, #edd97a 20%, #c8a830 28%, #8a6010 40%, #c8a830 55%, #edd97a 65%, #c8a830 75%, #8a6818 100%); }
@@ -1589,6 +1597,7 @@
 
   <!-- LEADERBOARD -->
   <div class="leaderboard" id="leaderboardSection">
+    <div class="section-header" id="rankingsTitle">🏆 Rankings</div>
     <div class="lb-sticky-wrap">
       <div class="lb-sticky-eyebrow">🏆 Rankings</div>
       <div class="lb-header-row">
@@ -1627,7 +1636,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.8 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.9.1 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2501,6 +2510,23 @@ function updateStatus(data, metaData) {
   const lastUpdated = (metaData && metaData[1] && metaData[1][1]) ? metaData[1][1] : '—';
   document.getElementById('statUpdated').textContent = lastUpdated;
 }
+
+// ── Collapsing eyebrow — shows above the sticky column header only once the big "Rankings" title scrolls out of view ──
+(function initRankingsEyebrowObserver() {
+  const title = document.getElementById('rankingsTitle');
+  const eyebrow = document.querySelector('.lb-sticky-eyebrow');
+  if (!title || !eyebrow) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        eyebrow.classList.toggle('active', !entry.isIntersecting);
+      });
+    },
+    { threshold: 0 }
+  );
+  observer.observe(title);
+})();
 
 function setActiveTab(tab) {
   const lb    = document.getElementById('leaderboardSection');
