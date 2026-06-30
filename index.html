@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.4
+  DUTTON RANCH WC2026 POOL — v2.1.5
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -274,15 +274,13 @@
   }
   .bottom-nav-icon { font-size: 12px; line-height: 1; }
 
-  /* ── Sticky leaderboard header (mobile only) ── */
+  /* ── Sticky leaderboard column header (mobile only) — locks beneath top tab bar ── */
   @media (max-width: 600px) {
-    .lb-sticky-header {
+    .lb-header-row {
       position: sticky;
-      top: 40px; /* flush under the top tab bar (no margin gap) */
+      top: var(--tab-bar-height, 38px); /* set dynamically by JS to match actual rendered tab bar height */
       z-index: 90;
       background: var(--dark-2);
-      padding-top: 4px;
-      margin-bottom: 4px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
   }
@@ -1627,13 +1625,11 @@
 
   <!-- LEADERBOARD -->
   <div class="leaderboard" id="leaderboardSection">
-    <div class="lb-sticky-header">
-      <div class="section-header">🏆 Pool Rankings</div>
-      <div class="lb-header-row">
-        <div>#</div>
-        <div>Player</div>
-        <div style="text-align:right">Total</div>
-      </div>
+    <div class="section-header">🏆 Pool Rankings</div>
+    <div class="lb-header-row">
+      <div>#</div>
+      <div>Player</div>
+      <div style="text-align:right">Total</div>
     </div>
     <div id="leaderboardRows">
       <div class="loading">
@@ -1665,7 +1661,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.4 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.5 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2135,7 +2131,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
       </div>`;
     } else {
       // Upcoming — show opponent only (no divider, no selected team)
-      r32CardHtml = `<div class="path-card r32">
+      r32CardHtml = `<div class="path-card-wrap r32"><div class="path-card-inner">
         <div class="path-card-teams">
           <div class="path-card-team">${r32OppRaw}</div>
         </div>
@@ -2143,7 +2139,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           <div class="path-card-time">${r32Time}</div>
           <div class="path-card-date">${r32Date}</div>
         </div>
-      </div>`;
+      </div></div>`;
     }
 
     timelineInner += `
@@ -2580,6 +2576,27 @@ function setActiveTab(tab) {
     { threshold: 0 }
   );
   observer.observe(topBar);
+})();
+
+// ── Dynamic tab bar height — keeps lb-header-row sticky offset accurate ──
+// Avoids hardcoding a pixel value that could drift with font loading or future style changes.
+(function syncTabBarHeight() {
+  const topBar = document.getElementById('topTabBar');
+  if (!topBar) return;
+
+  function applyHeight() {
+    const h = topBar.getBoundingClientRect().height;
+    if (h > 0) {
+      document.documentElement.style.setProperty('--tab-bar-height', h + 'px');
+    }
+  }
+
+  applyHeight();
+  window.addEventListener('resize', applyHeight);
+  // Re-measure once webfonts finish loading — Bebas Neue/Barlow Condensed can shift line-height
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(applyHeight);
+  }
 })();
 
 function getTournamentStatus() {
