@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.7
+  DUTTON RANCH WC2026 POOL — v2.1.8
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -226,64 +226,68 @@
     background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
   }
 
-  /* ── Bottom nav bar (mobile only) — appears once top tab bar scrolls out of view ── */
+  /* ── Bottom nav bar (mobile only) — permanent, single button showing the OTHER tab ── */
   .bottom-nav-bar {
     display: none;
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    height: 36px;
-    background: #0d0d15;
-    border-top: 1px solid rgba(255,255,255,0.07);
+    height: 52px;
+    background: var(--dark-3);
+    border-top: 1px solid rgba(212,175,55,0.35);
     z-index: 150;
-    transform: translateY(100%);
-    transition: transform 0.25s ease;
   }
-  .bottom-nav-bar.visible { transform: translateY(0); }
   @media (max-width: 600px) {
     .bottom-nav-bar { display: flex; }
   }
   .bottom-nav-btn {
-    flex: 1;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 8px;
     border: none;
     background: transparent;
     cursor: pointer;
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
+    font-size: 14px;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    color: rgba(160,160,192,0.4);
-    position: relative;
+    color: var(--gold);
   }
-  .bottom-nav-btn.active { color: var(--gold); }
-  .bottom-nav-btn.active::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 16px; right: 16px; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent);
-  }
-  .bottom-nav-sep {
-    width: 1px;
-    background: rgba(255,255,255,0.06);
-    align-self: stretch;
-    margin: 6px 0;
-  }
-  .bottom-nav-icon { font-size: 12px; line-height: 1; }
+  .bottom-nav-icon { font-size: 16px; line-height: 1; }
 
-  /* ── Sticky leaderboard column header (mobile only) — locks beneath top tab bar ── */
+  /* ── Sticky leaderboard column header (mobile only) — collapses section header into a gold eyebrow ── */
   @media (max-width: 600px) {
-    .lb-header-row {
+    .lb-sticky-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .lb-sticky-eyebrow::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(212,175,55,0.5), transparent);
+    }
+    .lb-sticky-wrap {
       position: sticky;
-      top: var(--tab-bar-height, 38px); /* set dynamically by JS to match actual rendered tab bar height */
+      top: 0;
       z-index: 90;
       background: var(--dark-2);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      padding-top: 14px;
-      padding-bottom: 10px;
+      padding: 12px 24px 6px;
+      margin: 0 -16px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+    }
+    .lb-sticky-wrap .lb-header-row {
+      padding: 0 0 8px;
+      margin-bottom: 0;
     }
   }
   .leaderboard {
@@ -572,7 +576,7 @@
   }
 
   @media (max-width: 600px) {
-    .footer { padding-bottom: 48px; }
+    .footer { padding-bottom: 64px; }
   }
 
 
@@ -588,36 +592,6 @@
     .header-title { font-size: 52px; }
     .status-bar { gap: 20px; }
     .lb-row { padding: 12px; }
-  }
-
-  .tab-bar {
-    display: none;
-    margin-bottom: 16px;
-    z-index: 10;
-    background: var(--dark-2);
-  }
-
-  @media (max-width: 600px) {
-    .tab-bar { display: flex; gap: 0; border-radius: 8px; overflow: hidden; background: var(--dark-3); border: 1px solid rgba(212,175,55,0.35); }
-  }
-
-  .tab-btn {
-    flex: 1;
-    padding: 10px;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 14px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .tab-btn.active {
-    background: var(--dark-4);
-    color: var(--gold);
   }
 
   .mobile-picks { display: none; }
@@ -1606,30 +1580,22 @@
     <div class="groups-scroll" id="groupStandingsCards"></div>
   </div>
 
-  <!-- MOBILE TAB BAR -->
-  <div class="tab-bar" id="topTabBar">
-    <button class="tab-btn active" onclick="setActiveTab('leaderboard')">🏆 Rankings</button>
-    <button class="tab-btn" onclick="setActiveTab('schedule')"><img src="trionda.png" style="width:16px;height:16px;vertical-align:-3px;margin-right:4px;">Schedule</button>
-  </div>
-
-  <!-- BOTTOM NAV BAR (mobile only, appears once top tab bar scrolls out of view) -->
+  <!-- BOTTOM NAV BAR (mobile only, permanent — shows only the OTHER tab) -->
   <div class="bottom-nav-bar" id="bottomNavBar">
-    <button class="bottom-nav-btn active" data-tab="leaderboard" onclick="setActiveTab('leaderboard')">
-      <span class="bottom-nav-icon">🏆</span> Rankings
-    </button>
-    <div class="bottom-nav-sep"></div>
-    <button class="bottom-nav-btn" data-tab="schedule" onclick="setActiveTab('schedule')">
-      <img src="trionda.png" style="width:13px;height:13px;" class="bottom-nav-icon"> Schedule
+    <button class="bottom-nav-btn" id="bottomNavBtn" onclick="setActiveTab('schedule')">
+      <img src="trionda.png" style="width:16px;height:16px;" class="bottom-nav-icon"> Schedule
     </button>
   </div>
 
   <!-- LEADERBOARD -->
   <div class="leaderboard" id="leaderboardSection">
-    <div class="section-header">🏆 Pool Rankings</div>
-    <div class="lb-header-row">
-      <div>#</div>
-      <div>Player</div>
-      <div style="text-align:right">Total</div>
+    <div class="lb-sticky-wrap">
+      <div class="lb-sticky-eyebrow">🏆 Rankings</div>
+      <div class="lb-header-row">
+        <div>#</div>
+        <div>Player</div>
+        <div style="text-align:right">Total</div>
+      </div>
     </div>
     <div id="leaderboardRows">
       <div class="loading">
@@ -1661,7 +1627,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.7 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.8 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2537,17 +2503,10 @@ function updateStatus(data, metaData) {
 }
 
 function setActiveTab(tab) {
-  // Sync active state across BOTH bars
-  document.querySelectorAll('.tab-bar .tab-btn').forEach((b, i) => {
-    b.classList.toggle('active', (i === 0 && tab === 'leaderboard') || (i === 1 && tab === 'schedule'));
-  });
-  document.querySelectorAll('.bottom-nav-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === tab);
-  });
-
   const lb    = document.getElementById('leaderboardSection');
   const mp    = document.getElementById('mobilePicks');
   const sched = document.getElementById('scheduleSection');
+  const btn   = document.getElementById('bottomNavBtn');
 
   // Reset all
   lb.classList.remove('hidden');
@@ -2557,47 +2516,16 @@ function setActiveTab(tab) {
   if (tab === 'schedule') {
     lb.classList.add('hidden');
     sched.classList.add('visible');
+    // Now on Schedule — bottom button offers the OTHER option: Rankings
+    btn.innerHTML = '<span class="bottom-nav-icon">🏆</span> Rankings';
+    btn.setAttribute('onclick', "setActiveTab('leaderboard')");
+  } else {
+    // Now on Rankings — bottom button offers the OTHER option: Schedule
+    btn.innerHTML = '<img src="trionda.png" style="width:16px;height:16px;" class="bottom-nav-icon"> Schedule';
+    btn.setAttribute('onclick', "setActiveTab('schedule')");
   }
   // Strip is never touched here — stays visible whenever it has cards
 }
-
-// ── Bottom nav bar visibility — appears once top tab bar scrolls out of view ──
-(function initBottomNavObserver() {
-  const topBar = document.getElementById('topTabBar');
-  const bottomBar = document.getElementById('bottomNavBar');
-  if (!topBar || !bottomBar) return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        bottomBar.classList.toggle('visible', !entry.isIntersecting);
-      });
-    },
-    { threshold: 0 }
-  );
-  observer.observe(topBar);
-})();
-
-// ── Dynamic tab bar height — keeps lb-header-row sticky offset accurate ──
-// Avoids hardcoding a pixel value that could drift with font loading or future style changes.
-(function syncTabBarHeight() {
-  const topBar = document.getElementById('topTabBar');
-  if (!topBar) return;
-
-  function applyHeight() {
-    const h = topBar.getBoundingClientRect().height;
-    if (h > 0) {
-      document.documentElement.style.setProperty('--tab-bar-height', h + 'px');
-    }
-  }
-
-  applyHeight();
-  window.addEventListener('resize', applyHeight);
-  // Re-measure once webfonts finish loading — Bebas Neue/Barlow Condensed can shift line-height
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(applyHeight);
-  }
-})();
 
 function getTournamentStatus() {
   const now = new Date();
