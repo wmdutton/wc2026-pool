@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.9.4
+  DUTTON RANCH WC2026 POOL — v2.1.9.5
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -425,8 +425,9 @@
     margin-top: 3px;
   }
 
-  .lb-row.is-bot {
-    border-left: 3px solid rgba(78,184,184,0.35);
+  .lb-row.is-bot::before {
+    background: var(--teal);
+    opacity: 0.35;
   }
 
   .lb-row.is-bot .total-pts {
@@ -1654,7 +1655,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.9.4 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.9.5 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
