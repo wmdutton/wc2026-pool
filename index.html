@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.9.3
+  DUTTON RANCH WC2026 POOL — v2.1.9.4
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -257,45 +257,64 @@
   }
   .bottom-nav-icon { font-size: 16px; line-height: 1; }
 
-  /* ── Sticky leaderboard column header (mobile only) ── */
+  /* ── Sticky section headers (mobile only) ── */
   @media (max-width: 600px) {
-    .lb-sticky-eyebrow {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--gold);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: max-height 0.15s ease, opacity 0.15s ease;
-    }
-    .lb-sticky-eyebrow.active {
-      max-height: 24px;
-      opacity: 1;
-      margin-bottom: 8px;
-    }
-    .lb-sticky-eyebrow::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(212,175,55,0.5), transparent);
-    }
-    .lb-sticky-wrap {
+    /* Rankings: title + column headers as one sticky unit */
+    .lb-sticky-unit {
       position: sticky;
       top: 0;
       z-index: 90;
-      background: var(--dark-2);
-      padding: 12px 24px 6px;
       margin: 0 -16px;
+      padding: 12px 16px 0;
+      background: rgba(17, 17, 24, 0);
+    }
+    .lb-sticky-unit.opaque {
+      background: rgba(17, 17, 24, 1);
       box-shadow: 0 6px 14px rgba(0,0,0,0.5);
     }
-    .lb-sticky-wrap .lb-header-row {
-      padding: 0 0 8px;
-      margin-bottom: 0;
+    .lb-unit-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 3px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .lb-unit-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
+    }
+    /* Schedule: title only sticky unit */
+    .sched-sticky-unit {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      margin: 0 -16px;
+      padding: 12px 16px;
+      background: rgba(17, 17, 24, 0);
+    }
+    .sched-sticky-unit.opaque {
+      background: rgba(17, 17, 24, 1);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+    }
+    .sched-unit-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 3px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sched-unit-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
     }
   }
   .leaderboard {
@@ -308,13 +327,12 @@
     display: grid;
     grid-template-columns: 44px 1fr 80px;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 0 12px 10px;
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--text-muted);
-    margin-bottom: 4px;
   }
 
   .lb-row {
@@ -1595,11 +1613,10 @@
 
   <!-- LEADERBOARD -->
   <div class="leaderboard" id="leaderboardSection">
-    <div class="section-header" id="rankingsTitle">🏆 Rankings</div>
-    <div class="lb-sticky-wrap">
-      <div class="lb-sticky-eyebrow">🏆 Rankings</div>
+    <div class="lb-sticky-unit" id="lbStickyUnit">
+      <div class="lb-unit-title">🏆 Rankings</div>
       <div class="lb-header-row">
-        <div>#</div>
+        <div style="text-align:center">#</div>
         <div>Player</div>
         <div style="text-align:right">Total</div>
       </div>
@@ -1628,14 +1645,16 @@
 
   <!-- SCHEDULE (mobile) -->
   <div class="schedule-section" id="scheduleSection">
-    <div class="section-header"><img src="trionda.png" style="width:20px;height:20px;vertical-align:-4px;margin-right:6px;">Schedule</div>
+    <div class="sched-sticky-unit" id="schedStickyUnit">
+      <div class="sched-unit-title"><img src="trionda.png" style="width:20px;height:20px;vertical-align:-4px;flex-shrink:0;">Schedule</div>
+    </div>
     <div id="scheduleCards">
       <div class="loading"><div class="loading-spinner"></div>Loading schedule...</div>
     </div>
   </div>
 
   <div class="footer">
-    <div>v2.1.9.3 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.1.9.4 · June 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2510,21 +2529,27 @@ function updateStatus(data, metaData) {
   document.getElementById('statUpdated').textContent = lastUpdated;
 }
 
-// ── Collapsing eyebrow — shows above the sticky column header only once the big "Rankings" title scrolls out of view ──
-(function initRankingsEyebrowObserver() {
-  const title = document.getElementById('rankingsTitle');
-  const eyebrow = document.querySelector('.lb-sticky-eyebrow');
-  if (!title || !eyebrow) return;
+// ── Scroll-driven sticky header fade (Rankings + Schedule) ──
+// Background fades from transparent → var(--dark-2) over FADE_WINDOW px
+// of scroll travel before the unit locks at top: 0.
+(function initStickyFaders() {
+  const FADE_WINDOW = 120;
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        eyebrow.classList.toggle('active', !entry.isIntersecting);
-      });
-    },
-    { threshold: 0 }
-  );
-  observer.observe(title);
+  function attachFader(unitId) {
+    const unit = document.getElementById(unitId);
+    if (!unit) return;
+    window.addEventListener('scroll', function() {
+      const unitTop = unit.getBoundingClientRect().top;
+      // unitTop goes from positive (below top) toward 0 (locked)
+      // progress: 0 = far away, 1 = at/past top
+      const progress = Math.min(1, Math.max(0, (FADE_WINDOW - unitTop) / FADE_WINDOW));
+      unit.style.background = 'rgba(17, 17, 24, ' + progress + ')';
+      unit.style.boxShadow = progress >= 1 ? '0 6px 14px rgba(0,0,0,0.5)' : 'none';
+    }, { passive: true });
+  }
+
+  attachFader('lbStickyUnit');
+  attachFader('schedStickyUnit');
 })();
 
 function setActiveTab(tab) {
