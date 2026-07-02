@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.1.9.5
+  DUTTON RANCH WC2026 POOL — v2.2.0.0
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1655,7 +1655,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.1.9.5 · June 2026 · Created by Mason Dutton</div>
+    <div>v2.2.0.0 · July 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1720,6 +1720,22 @@ const BRACKET = {
   86: { r16: 88,  qf: [85,87],       sf: [76,78,79,80],           final: [73,74,75,77,81,82,83,84] },
   87: { r16: 85,  qf: [86,88],       sf: [76,78,79,80],           final: [73,74,75,77,81,82,83,84] },
   88: { r16: 86,  qf: [85,87],       sf: [76,78,79,80],           final: [73,74,75,77,81,82,83,84] },
+};
+
+// ── GAME_CHAIN — maps each knockout game number to the NEXT game number
+// it feeds into (R32→R16→QF→SF→Final). Distinct from BRACKET: BRACKET
+// stores POOLS of R32 games belonging to each future-tier row (unchanged,
+// still correct); GAME_CHAIN stores the actual downstream game id so we
+// can walk UP from any R32 game to find its real R16/QF/SF/Final game
+// and check the SHEET directly for whether that game's two teams are
+// already known (real names) or still W##/L## placeholders.
+// Source: Schedule tab game numbers 89–104 (R16, QF, SF, 3P, Final rows).
+const GAME_CHAIN = {
+  73:90, 75:90, 74:89, 77:89, 76:91, 78:91, 79:92, 80:92,
+  83:93, 84:93, 81:94, 82:94, 86:95, 88:95, 85:96, 87:96,
+  90:97, 89:97, 91:98, 92:98, 93:99, 94:99, 95:100, 96:100,
+  97:101, 98:101, 99:102, 100:102,
+  101:104, 102:104,
 };
 
 const ROUND_LABELS = {
@@ -1824,6 +1840,65 @@ function getGameByNum(scheduleData, gameNum) {
   );
 }
 
+// ── Helper: is this a real team name, or a W##/L## bracket placeholder? ──
+// Placeholders (e.g. "W83", "L101") appear in Home/Away cols until Mason
+// manually fills in the real team name once that slot is knowable.
+function isRealTeamName(name) {
+  const n = (name || '').trim();
+  return n !== '' && !/^[WL]\d+$/.test(n);
+}
+
+// ── Helper: walk a game number forward through GAME_CHAIN as far as the
+// sheet has real team names filled in. Returns the row for the HIGHEST
+// resolved game reached, or the starting row itself if nothing above it
+// is resolved yet. Trusts the sheet directly — never derives winners from
+// scores, per Mason: "just trust what the sheet says."
+function resolveUpward(scheduleData, startGameNum) {
+  let currentNum = startGameNum;
+  let currentRow = getGameByNum(scheduleData, currentNum);
+  while (GAME_CHAIN[currentNum] !== undefined) {
+    const nextNum = GAME_CHAIN[currentNum];
+    const nextRow = getGameByNum(scheduleData, nextNum);
+    if (!nextRow) break;
+    const nextHome = (nextRow[2] || '').trim();
+    const nextAway = (nextRow[3] || '').trim();
+    if (isRealTeamName(nextHome) && isRealTeamName(nextAway)) {
+      currentNum = nextNum;
+      currentRow = nextRow;
+    } else {
+      break; // next level not yet resolved in the sheet — stop here
+    }
+  }
+  return currentRow;
+}
+
+// ── Helper: build the card list for one future-tier row (R16/QF/SF/Final).
+// r32Pool: the fixed pool of R32 game numbers for this row (from BRACKET —
+// unchanged, still correct). tier: fixed styling for every card in this row.
+// excludeTeamName (optional, R16 only): passed through to futureGameCard so
+// the selected team's own R16 slot shows the opponent only, not a redundant
+// "Team vs Team" card — see futureGameCard for details.
+// Groups the pool by shared R16 destination, resolves each group as far up
+// the real bracket as the sheet allows, and renders one card per group —
+// always styled at this row's own tier, per Mason's "color = the row"
+// decision, regardless of which actual game level backs the card's content.
+function resolvePoolCards(scheduleData, r32Pool, tier, excludeTeamName) {
+  const seen = new Set();
+  const cards = [];
+  r32Pool.forEach(r32Num => {
+    if (seen.has(r32Num)) return;
+    const r16Dest = GAME_CHAIN[r32Num];
+    // Find this R32 game's sibling within the pool (shares the same r16Dest)
+    const sibling = r32Pool.find(n => n !== r32Num && GAME_CHAIN[n] === r16Dest);
+    if (sibling !== undefined) seen.add(sibling);
+    seen.add(r32Num);
+
+    const resolvedRow = resolveUpward(scheduleData, r32Num);
+    cards.push(futureGameCard(resolvedRow, tier, excludeTeamName));
+  });
+  return cards.join('');
+}
+
 // ── Helper: get all group games for a team ──
 function getGroupGames(scheduleData, teamName) {
   return scheduleData.slice(1).filter(r => {
@@ -1907,7 +1982,11 @@ function groupUpcomingCard(gameRow, teamName) {
 }
 
 // ── Helper: render a future bracket game card (opponent-producing) ──
-function futureGameCard(gameRow, tier) {
+// excludeTeamName (optional): if the selected team is one of the two sides
+// (only ever true for the selected team's OWN R16 slot), show the OPPONENT
+// only instead of a redundant "Team vs Team" card. QF/SF/Final callers never
+// pass this — both sides there are genuinely other teams.
+function futureGameCard(gameRow, tier, excludeTeamName) {
   if (!gameRow) return `<div class="path-card-wrap ${tier}"><div class="path-card-inner">
     <div class="path-card-teams">
       <div class="path-card-team" style="color:var(--text-muted)">TBD</div>
@@ -1938,6 +2017,18 @@ function futureGameCard(gameRow, tier) {
       </div>
       <div class="path-settled-meta">
         <div class="path-settled-date">${date}</div>
+      </div>
+    </div></div>`;
+  } else if (excludeTeamName && (homeRaw === excludeTeamName || awayRaw === excludeTeamName)) {
+    // Selected team is one side of an unplayed game — show opponent only
+    const oppFull = homeRaw === excludeTeamName ? awayFull : homeFull;
+    return `<div class="path-card-wrap ${tier}"><div class="path-card-inner">
+      <div class="path-card-teams">
+        <div class="path-card-team">${oppFull}</div>
+      </div>
+      <div class="path-card-meta">
+        <div class="path-card-time">${time}</div>
+        <div class="path-card-date">${date}</div>
       </div>
     </div></div>`;
   } else {
@@ -2158,9 +2249,14 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
       if (bracketPath) {
 
         // R16
-        const r16Row = getGameByNum(scheduleData, bracketPath.r16);
+        const r16GameNum = GAME_CHAIN[r32GameNum]; // real R16 game number (e.g. 94), not the R32 sibling
+        const r16Row = getGameByNum(scheduleData, r16GameNum);
         const r16HasScore = r16Row && (r16Row[9]||'').trim() !== '' && (r16Row[10]||'').trim() !== '';
         const r16IsComplete = r16HasScore;
+        // Opponent-side resolution: walk up from the SIBLING R32 game only —
+        // the R16 row is entirely about the opponent side, so the selected
+        // team's own R32 result plays no part in what displays here.
+        const r16OpponentRow = resolveUpward(scheduleData, bracketPath.r16);
 
         if (!r32HasScore) {
           // R32 not played yet — R16+ are Possible Future Opponents
@@ -2183,7 +2279,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
               <div class="path-phase ${r16PhaseClass}">Round of 16</div>
               <div class="path-phase-right">${r16IsComplete && r16Row ? formatKickoff(r16Row[1]).date : PHASE_DATES.r16}</div>
             </div>
-            <div class="path-scroll">${futureGameCard(r16Row, 'r16')}</div>
+            <div class="path-scroll">${futureGameCard(r16OpponentRow, 'r16', teamName)}</div>
           </div>`;
 
         if (isElim && elimRound === 'Round of 16') {
@@ -2196,11 +2292,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           timelineInner += `<div class="path-section-label">Possible Future Opponents</div>`;
           pastFirstFuture = true;
         }
-        const qfCards = (bracketPath.qf || []).map(gn => {
-          const gr = getGameByNum(scheduleData, gn);
-          const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, 'qf');
-        }).join('');
+        const qfCards = resolvePoolCards(scheduleData, bracketPath.qf || [], 'qf');
         const qfDotClass = 'qf';
         timelineInner += `
           <div class="path-step">
@@ -2217,11 +2309,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           timelineInner += `<div class="path-section-label">Possible Future Opponents</div>`;
           pastFirstFuture = true;
         }
-        const sfCards = (bracketPath.sf || []).map(gn => {
-          const gr = getGameByNum(scheduleData, gn);
-          const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, 'sf');
-        }).join('');
+        const sfCards = resolvePoolCards(scheduleData, bracketPath.sf || [], 'sf');
         timelineInner += `
           <div class="path-step">
             <div class="path-dot sf"></div>
@@ -2233,11 +2321,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           </div>`;
 
         // Final
-        const finalCards = (bracketPath.final || []).map(gn => {
-          const gr = getGameByNum(scheduleData, gn);
-          const done = gr && (gr[9]||'').trim() !== '' && (gr[10]||'').trim() !== '';
-          return futureGameCard(gr, 'final');
-        }).join('');
+        const finalCards = resolvePoolCards(scheduleData, bracketPath.final || [], 'final');
         timelineInner += `
           <div class="path-step">
             <div class="path-dot final"></div>
