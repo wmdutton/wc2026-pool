@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.2.0.0
+  DUTTON RANCH WC2026 POOL — v2.2.1.0
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1301,7 +1301,7 @@
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(180,80,80,0.7);
+    color: #e05a5a;
     margin-top: 4px;
     padding-left: 36px;
   }
@@ -1367,7 +1367,7 @@
     z-index: 1;
   }
   .path-dot.won     { background: #5db87a; }
-  .path-dot.loss    { background: rgba(180,80,80,0.6); }
+  .path-dot.loss    { background: #e05a5a; }
   .path-dot.ongoing { background: #4eb8b8; }
   .path-dot.r32     { background: #c8c8d8; }
   .path-dot.r16     { background: #d8c8a8; }
@@ -1407,7 +1407,7 @@
     text-transform: uppercase;
   }
   .path-phase.won  { color: #5db87a; }
-  .path-phase.loss { color: rgba(180,80,80,0.65); }
+  .path-phase.loss { color: #e07878; }
   .path-phase.ongoing { color: #4eb8b8; }
   .path-phase.r32  { color: #c8c8d8; }
   .path-phase.r16  { color: #d8c8a8; }
@@ -1455,7 +1455,7 @@
   }
   .path-card.won   { background: rgba(80,180,110,0.04);  border: 1px solid rgba(80,180,110,0.3); }
   .path-card.draw  { background: rgba(216,200,168,0.03); border: 1px solid rgba(216,200,168,0.25); }
-  .path-card.loss  { background: rgba(16,16,22,0.5);     border: 1px solid rgba(180,80,80,0.2); }
+  .path-card.loss  { background: rgba(16,16,22,0.5);     border: 1px solid rgba(224,90,90,0.4); }
   /* Wrapper border gradients */
   .path-card-wrap.r32   { background: linear-gradient(135deg, #8a8a9c 0%, #c8c8d8 30%, #e8e8f0 50%, #c8c8d8 70%, #75758a 100%); }
   .path-card-wrap.r16   { background: linear-gradient(135deg, #a8966e 0%, #d8c8a8 30%, #f0e6d0 50%, #d8c8a8 70%, #93805a 100%); }
@@ -1494,7 +1494,7 @@
   .path-card-divider { height: 1px; margin: 5px 0; }
   .path-card.won   .path-card-divider { background: linear-gradient(90deg, rgba(80,180,110,0.3), transparent 60%); }
   .path-card.draw  .path-card-divider { background: linear-gradient(90deg, rgba(216,200,168,0.25), transparent 60%); }
-  .path-card.loss  .path-card-divider { background: linear-gradient(90deg, rgba(180,80,80,0.2), transparent 60%); }
+  .path-card.loss  .path-card-divider { background: linear-gradient(90deg, rgba(224,90,90,0.4), transparent 60%); }
   .path-card-wrap.r32   .path-card-divider { background: linear-gradient(90deg, rgba(200,200,216,0.3), transparent 60%); }
   .path-card-wrap.r16   .path-card-divider { background: linear-gradient(90deg, rgba(216,200,168,0.4), transparent 60%); }
   .path-card-wrap.qf    .path-card-divider { background: linear-gradient(90deg, rgba(232,160,80,0.45), transparent 60%); }
@@ -1503,7 +1503,7 @@
   .path-score-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 2px; }
   .path-score-win   { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #5db87a; letter-spacing: 1px; }
   .path-score-draw  { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #d8c8a8; letter-spacing: 1px; }
-  .path-score-loss  { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: rgba(180,80,80,0.7); letter-spacing: 1px; }
+  .path-score-loss  { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #e05a5a; letter-spacing: 1px; }
   .path-score-sep   { font-family: 'Bebas Neue', sans-serif; font-size: 13px; color: rgba(160,160,192,0.3); }
   .path-score-muted { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: rgba(160,160,192,0.3); letter-spacing: 1px; }
   .path-opponent { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; color: rgba(160,160,192,0.45); }
@@ -1655,7 +1655,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.2.0.0 · July 2026 · Created by Mason Dutton</div>
+    <div>v2.2.1.0 · July 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1882,7 +1882,7 @@ function resolveUpward(scheduleData, startGameNum) {
 // the real bracket as the sheet allows, and renders one card per group —
 // always styled at this row's own tier, per Mason's "color = the row"
 // decision, regardless of which actual game level backs the card's content.
-function resolvePoolCards(scheduleData, r32Pool, tier, excludeTeamName) {
+function resolvePoolCards(scheduleData, r32Pool, tier, excludeTeamName, showTime, ownKickoff) {
   const seen = new Set();
   const cards = [];
   r32Pool.forEach(r32Num => {
@@ -1894,7 +1894,7 @@ function resolvePoolCards(scheduleData, r32Pool, tier, excludeTeamName) {
     seen.add(r32Num);
 
     const resolvedRow = resolveUpward(scheduleData, r32Num);
-    cards.push(futureGameCard(resolvedRow, tier, excludeTeamName));
+    cards.push(futureGameCard(resolvedRow, tier, excludeTeamName, showTime, ownKickoff));
   });
   return cards.join('');
 }
@@ -1986,7 +1986,7 @@ function groupUpcomingCard(gameRow, teamName) {
 // (only ever true for the selected team's OWN R16 slot), show the OPPONENT
 // only instead of a redundant "Team vs Team" card. QF/SF/Final callers never
 // pass this — both sides there are genuinely other teams.
-function futureGameCard(gameRow, tier, excludeTeamName) {
+function futureGameCard(gameRow, tier, excludeTeamName, showTime, ownKickoff) {
   if (!gameRow) return `<div class="path-card-wrap ${tier}"><div class="path-card-inner">
     <div class="path-card-teams">
       <div class="path-card-team" style="color:var(--text-muted)">TBD</div>
@@ -2003,6 +2003,11 @@ function futureGameCard(gameRow, tier, excludeTeamName) {
   const kickoff   = (gameRow[1]  || '').trim();
   const hasScore  = homeScore !== '' && awayScore !== '';
   const { time, date } = formatKickoff(kickoff);
+  // When this card represents the selected team's actual next-round game
+  // (showTime=true), the time/date shown must be THIS ROUND's own kickoff
+  // (ownKickoff, e.g. the QF game's date), not the resolved opponent-
+  // producing game's date — those can differ by days/weeks.
+  const ownFormatted = ownKickoff ? formatKickoff(ownKickoff) : { time, date };
   const homeFull  = homeFlag ? `${homeFlag} ${homeRaw}` : homeRaw;
   const awayFull  = awayFlag ? `${awayFlag} ${awayRaw}` : awayRaw;
 
@@ -2011,6 +2016,20 @@ function futureGameCard(gameRow, tier, excludeTeamName) {
     const hs = parseInt(homeScore, 10);
     const as = parseInt(awayScore, 10);
     const winnerFull = hs >= as ? homeFull : awayFull;
+    if (showTime) {
+      // Opponent is decided AND this is the team's real next-round game —
+      // show winner (opponent) with the upcoming round's own time/date,
+      // same meta layout as an unplayed opponent-only card.
+      return `<div class="path-card-wrap ${tier}"><div class="path-card-inner">
+        <div class="path-card-teams">
+          <div class="path-card-team">${winnerFull}</div>
+        </div>
+        <div class="path-card-meta">
+          <div class="path-card-time">${ownFormatted.time}</div>
+          <div class="path-card-date">${ownFormatted.date}</div>
+        </div>
+      </div></div>`;
+    }
     return `<div class="path-card-wrap ${tier}"><div class="path-card-inner settled">
       <div class="path-card-teams">
         <div class="path-card-team">${winnerFull}</div>
@@ -2031,6 +2050,22 @@ function futureGameCard(gameRow, tier, excludeTeamName) {
         <div class="path-card-date">${date}</div>
       </div>
     </div></div>`;
+  } else if (showTime) {
+    // Immediate "up next" tier for QF/SF/Final pool cards — team's own prior
+    // round is complete and opponent isn't decided yet, so this pool's
+    // cards are the real next-round field. Show the round's own time/date
+    // (matches R32/R16's "up next" treatment).
+    return `<div class="path-card-wrap ${tier}"><div class="path-card-inner">
+      <div class="path-card-teams">
+        <div class="path-card-team">${homeFull}</div>
+        <div class="path-card-divider"></div>
+        <div class="path-card-team">${awayFull}</div>
+      </div>
+      <div class="path-card-meta">
+        <div class="path-card-time">${ownFormatted.time}</div>
+        <div class="path-card-date">${ownFormatted.date}</div>
+      </div>
+    </div></div>`;
   } else {
     // Future game — show both teams (or TBD placeholders from sheet)
     return `<div class="path-card-wrap ${tier}"><div class="path-card-inner">
@@ -2045,6 +2080,49 @@ function futureGameCard(gameRow, tier, excludeTeamName) {
       </div>
     </div></div>`;
   }
+}
+
+// ── Helper: build a won/draw/loss RESULT card for the selected team's own
+// game at any tier (R16/QF/SF/Final), reusing the exact same markup as the
+// R32 result card. Returns { cardClass, dotClass, phaseClass, cardHtml, date }.
+// Call only when `row` is confirmed to be the selected team's own game
+// (teamName appears as home or away) AND the game has a score.
+function teamResultCard(row, teamName) {
+  const homeRaw   = (row[2] || '').trim();
+  const awayRaw   = (row[3] || '').trim();
+  const homeFlag  = (row[4] || '').trim();
+  const awayFlag  = (row[5] || '').trim();
+  const homeScore = (row[9]  || '').trim();
+  const awayScore = (row[10] || '').trim();
+  const { date } = formatKickoff((row[1] || '').trim());
+
+  const isHome  = homeRaw === teamName;
+  const oppRaw  = isHome ? `${awayFlag} ${awayRaw}` : `${homeFlag} ${homeRaw}`;
+  const teamScore = isHome ? homeScore : awayScore;
+  const oppScore   = isHome ? awayScore : homeScore;
+
+  const ts = parseInt(teamScore, 10);
+  const os = parseInt(oppScore,  10);
+  const cardClass = ts > os ? 'won' : ts < os ? 'loss' : 'draw';
+
+  let scoreHtml;
+  if (ts > os) {
+    scoreHtml = `<span class="path-score-win">${teamScore}</span><span class="path-score-sep">–</span><span class="path-score-muted">${oppScore}</span>`;
+  } else if (ts < os) {
+    scoreHtml = `<span class="path-score-muted">${teamScore}</span><span class="path-score-sep">–</span><span class="path-score-loss">${oppScore}</span>`;
+  } else {
+    scoreHtml = `<span class="path-score-draw">${teamScore}</span><span class="path-score-sep">–</span><span class="path-score-draw">${oppScore}</span>`;
+  }
+
+  const cardHtml = `<div class="path-card ${cardClass}">
+    <div class="path-card-teams">
+      <div class="path-score-row">${scoreHtml}</div>
+      <div class="path-opponent">${oppRaw}</div>
+    </div>
+    <div class="path-card-meta"><div class="path-card-date-sm">${date}</div></div>
+  </div>`;
+
+  return { cardClass, dotClass: cardClass, phaseClass: cardClass, cardHtml, date };
 }
 
 // ── Helper: determine group stage dot class ──
@@ -2248,14 +2326,23 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
       const bracketPath = BRACKET[r32GameNum];
       if (bracketPath) {
 
-        // R16
-        const r16GameNum = GAME_CHAIN[r32GameNum]; // real R16 game number (e.g. 94), not the R32 sibling
+        // Walk the selected team's OWN advancing game number forward through
+        // each tier via GAME_CHAIN (distinct from bracketPath.r16/qf/sf/final,
+        // which are pools of OTHER teams' R32 games). This lets us detect
+        // when the selected team's own game at a given tier has been played,
+        // so we can render it as a won/loss RESULT card (not a neutral
+        // tier-colored pool card) and stop the pathway on a loss — matching
+        // Group/R32 behavior exactly.
+        let ownGameNum = r32GameNum;
+        let sawOwnLoss = false;
+
+        // ── R16 ──
+        const r16GameNum = GAME_CHAIN[ownGameNum]; // real R16 game number (e.g. 94), not the R32 sibling
         const r16Row = getGameByNum(scheduleData, r16GameNum);
         const r16HasScore = r16Row && (r16Row[9]||'').trim() !== '' && (r16Row[10]||'').trim() !== '';
         const r16IsComplete = r16HasScore;
         // Opponent-side resolution: walk up from the SIBLING R32 game only —
-        // the R16 row is entirely about the opponent side, so the selected
-        // team's own R32 result plays no part in what displays here.
+        // used only when the team's own R16 game isn't resolved yet.
         const r16OpponentRow = resolveUpward(scheduleData, bracketPath.r16);
 
         if (!r32HasScore) {
@@ -2270,16 +2357,28 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           timelineInner += `<div class="path-section-label">Up Next</div>`;
         }
 
-        const r16DotClass = 'r16';
-        const r16PhaseClass = 'r16';
+        let r16DotClass = 'r16', r16PhaseClass = 'r16', r16CardHtml, r16PhaseRight;
+        if (r16IsComplete) {
+          const result = teamResultCard(r16Row, teamName);
+          r16DotClass = result.dotClass;
+          r16PhaseClass = result.phaseClass;
+          r16CardHtml = result.cardHtml;
+          r16PhaseRight = result.date;
+          if (result.cardClass === 'loss') sawOwnLoss = true;
+          ownGameNum = r16GameNum;
+        } else {
+          r16CardHtml = futureGameCard(r16OpponentRow, 'r16', teamName);
+          r16PhaseRight = PHASE_DATES.r16;
+        }
+
         timelineInner += `
           <div class="path-step">
             <div class="path-dot ${r16DotClass}"></div>
             <div class="path-phase-row">
               <div class="path-phase ${r16PhaseClass}">Round of 16</div>
-              <div class="path-phase-right">${r16IsComplete && r16Row ? formatKickoff(r16Row[1]).date : PHASE_DATES.r16}</div>
+              <div class="path-phase-right">${r16PhaseRight}</div>
             </div>
-            <div class="path-scroll">${futureGameCard(r16OpponentRow, 'r16', teamName)}</div>
+            <div class="path-scroll">${r16CardHtml}</div>
           </div>`;
 
         if (isElim && elimRound === 'Round of 16') {
@@ -2287,49 +2386,134 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
                  `<div class="path-timeline">${timelineInner}</div>`;
         }
 
-        // QF
+        // If the selected team lost their own R16 game, stop the pathway here
+        // — no QF/SF/Final rows render, same as an early elimination.
+        if (sawOwnLoss) {
+          return bannerHtml +
+                 `<div class="path-timeline">${timelineInner}</div>`;
+        }
+
+        // ── QF ──
         if (!pastFirstFuture && !r16IsComplete) {
           timelineInner += `<div class="path-section-label">Possible Future Opponents</div>`;
           pastFirstFuture = true;
         }
-        const qfCards = resolvePoolCards(scheduleData, bracketPath.qf || [], 'qf');
-        const qfDotClass = 'qf';
+        const qfGameNum = GAME_CHAIN[ownGameNum];
+        const qfRow = getGameByNum(scheduleData, qfGameNum); // always exists in schedule, even before team names resolve
+        const qfHasScore = qfRow && (qfRow[9]||'').trim() !== '' && (qfRow[10]||'').trim() !== '';
+        const qfIsComplete = r16IsComplete && qfHasScore;
+        // "Up next" for QF pool cards: true only when the team's own R16 is
+        // done but their own QF hasn't been played yet — i.e. this pool IS
+        // the team's real next-round field, not a further-out possibility.
+        const qfShowTime = r16IsComplete && !qfIsComplete;
+        const qfOwnKickoff = qfRow ? qfRow[1] : '';
+
+        let qfDotClass = 'qf', qfPhaseClass = 'qf', qfCardsHtml, qfPhaseRight = PHASE_DATES.qf;
+        if (qfIsComplete) {
+          const result = teamResultCard(qfRow, teamName);
+          qfDotClass = result.dotClass;
+          qfPhaseClass = result.phaseClass;
+          qfCardsHtml = result.cardHtml;
+          qfPhaseRight = result.date;
+          if (result.cardClass === 'loss') sawOwnLoss = true;
+          ownGameNum = qfGameNum;
+        } else {
+          qfCardsHtml = resolvePoolCards(scheduleData, bracketPath.qf || [], 'qf', undefined, qfShowTime, qfOwnKickoff);
+          if (qfShowTime) qfPhaseRight = formatKickoff(qfOwnKickoff).date;
+        }
+
         timelineInner += `
           <div class="path-step">
             <div class="path-dot ${qfDotClass}"></div>
             <div class="path-phase-row">
-              <div class="path-phase qf">Quarter-Final</div>
-              <div class="path-phase-right">${PHASE_DATES.qf}</div>
+              <div class="path-phase ${qfPhaseClass}">Quarter-Final</div>
+              <div class="path-phase-right">${qfPhaseRight}</div>
             </div>
-            <div class="path-scroll">${qfCards}</div>
+            <div class="path-scroll">${qfCardsHtml}</div>
           </div>`;
 
-        // SF
+        if (isElim && elimRound === 'Quarter-Final') {
+          return bannerHtml +
+                 `<div class="path-timeline">${timelineInner}</div>`;
+        }
+        if (sawOwnLoss) {
+          return bannerHtml +
+                 `<div class="path-timeline">${timelineInner}</div>`;
+        }
+
+        // ── SF ──
         if (!pastFirstFuture) {
           timelineInner += `<div class="path-section-label">Possible Future Opponents</div>`;
           pastFirstFuture = true;
         }
-        const sfCards = resolvePoolCards(scheduleData, bracketPath.sf || [], 'sf');
+        const sfGameNum = GAME_CHAIN[ownGameNum];
+        const sfRow = getGameByNum(scheduleData, sfGameNum); // always exists in schedule
+        const sfHasScore = sfRow && (sfRow[9]||'').trim() !== '' && (sfRow[10]||'').trim() !== '';
+        const sfIsComplete = qfIsComplete && sfHasScore;
+        const sfShowTime = qfIsComplete && !sfIsComplete;
+        const sfOwnKickoff = sfRow ? sfRow[1] : '';
+
+        let sfDotClass = 'sf', sfCardsHtml, sfPhaseRight = PHASE_DATES.sf;
+        if (sfIsComplete) {
+          const result = teamResultCard(sfRow, teamName);
+          sfDotClass = result.dotClass;
+          sfCardsHtml = result.cardHtml;
+          sfPhaseRight = result.date;
+          if (result.cardClass === 'loss') sawOwnLoss = true;
+          ownGameNum = sfGameNum;
+        } else {
+          sfCardsHtml = resolvePoolCards(scheduleData, bracketPath.sf || [], 'sf', undefined, sfShowTime, sfOwnKickoff);
+          if (sfShowTime) sfPhaseRight = formatKickoff(sfOwnKickoff).date;
+        }
+
+        const sfPhaseClass = sfIsComplete ? sfDotClass : 'sf';
         timelineInner += `
           <div class="path-step">
-            <div class="path-dot sf"></div>
+            <div class="path-dot ${sfDotClass}"></div>
             <div class="path-phase-row">
-              <div class="path-phase sf">Semi-Final</div>
-              <div class="path-phase-right">${PHASE_DATES.sf}</div>
+              <div class="path-phase ${sfPhaseClass}">Semi-Final</div>
+              <div class="path-phase-right">${sfPhaseRight}</div>
             </div>
-            <div class="path-scroll">${sfCards}</div>
+            <div class="path-scroll">${sfCardsHtml}</div>
           </div>`;
 
-        // Final
-        const finalCards = resolvePoolCards(scheduleData, bracketPath.final || [], 'final');
+        if (isElim && elimRound === 'Semi-Final') {
+          return bannerHtml +
+                 `<div class="path-timeline">${timelineInner}</div>`;
+        }
+        if (sawOwnLoss) {
+          return bannerHtml +
+                 `<div class="path-timeline">${timelineInner}</div>`;
+        }
+
+        // ── Final ──
+        const finalGameNum = GAME_CHAIN[ownGameNum];
+        const finalRow = getGameByNum(scheduleData, finalGameNum); // always exists in schedule
+        const finalHasScore = finalRow && (finalRow[9]||'').trim() !== '' && (finalRow[10]||'').trim() !== '';
+        const finalIsComplete = sfIsComplete && finalHasScore;
+        const finalShowTime = sfIsComplete && !finalIsComplete;
+        const finalOwnKickoff = finalRow ? finalRow[1] : '';
+
+        let finalDotClass = 'final', finalCardsHtml, finalPhaseRight = PHASE_DATES.final;
+        if (finalIsComplete) {
+          const result = teamResultCard(finalRow, teamName);
+          finalDotClass = result.dotClass;
+          finalCardsHtml = result.cardHtml;
+          finalPhaseRight = result.date;
+        } else {
+          finalCardsHtml = resolvePoolCards(scheduleData, bracketPath.final || [], 'final', undefined, finalShowTime, finalOwnKickoff);
+          if (finalShowTime) finalPhaseRight = formatKickoff(finalOwnKickoff).date;
+        }
+
+        const finalPhaseClass = finalIsComplete ? finalDotClass : 'final';
         timelineInner += `
           <div class="path-step">
-            <div class="path-dot final"></div>
+            <div class="path-dot ${finalDotClass}"></div>
             <div class="path-phase-row">
-              <div class="path-phase final">Final</div>
-              <div class="path-phase-right">${PHASE_DATES.final}</div>
+              <div class="path-phase ${finalPhaseClass}">Final</div>
+              <div class="path-phase-right">${finalPhaseRight}</div>
             </div>
-            <div class="path-scroll">${finalCards}</div>
+            <div class="path-scroll">${finalCardsHtml}</div>
           </div>`;
       }
     }
