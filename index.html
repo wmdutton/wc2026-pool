@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.2.1.0
+  DUTTON RANCH WC2026 POOL — v2.2.1.1
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1655,7 +1655,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.2.1.0 · July 2026 · Created by Mason Dutton</div>
+    <div>v2.2.1.1 · July 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2321,8 +2321,11 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
              `<div class="path-timeline">${timelineInner}</div>`;
     }
 
-    // ─── Future bracket phases (R16, QF, SF, Final) for active teams ───
-    if (!isElim) {
+    // ─── R16/QF/SF/Final phases — for active teams (future opponents) AND
+    // eliminated teams (own result cards up to their elimination round).
+    // Group/R32 eliminations already returned above, so any isElim team
+    // reaching this point was eliminated at R16 or later.
+    {
       const bracketPath = BRACKET[r32GameNum];
       if (bracketPath) {
 
