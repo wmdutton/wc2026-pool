@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.2.1.1
+  DUTTON RANCH WC2026 POOL — v2.2.2.0
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1295,16 +1295,6 @@
     line-height: 1.3;
   }
   .path-pick-badge .pts { color: #D4AF37; display: block; }
-  .path-elim-tag {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #e05a5a;
-    margin-top: 4px;
-    padding-left: 36px;
-  }
   .path-eyebrow-wrap { padding: 0 16px; padding-bottom: 12px; }
   .path-eyebrow {
     font-family: 'Bebas Neue', sans-serif;
@@ -1655,7 +1645,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.2.1.1 · July 2026 · Created by Mason Dutton</div>
+    <div>v2.2.2.0 · July 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -2141,7 +2131,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
   const pts = (teamRaw.split(' - ')[1] || '').trim();
   const isElim = eliminatedTeams.has(teamName);
   const elimRound = eliminationRoundMap[teamName] || '';
-  const eyebrowText = isElim ? 'Tournament Run' : 'Road to the Final';
+  const eyebrowText = 'Tournament Path';
 
   // ── Banner + sticky header ──
   const bannerHtml = `
@@ -2167,7 +2157,6 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
             ${pts ? `<span class="pts">${pts}</span>` : ''}
           </div>
         </div>
-        ${isElim ? `<div class="path-elim-tag">Eliminated · ${elimRound}</div>` : ''}
       </div>
       <div class="path-eyebrow-wrap">
         <div class="path-eyebrow">${eyebrowText}</div>
@@ -2206,21 +2195,12 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
   let needsUpNext      = !isElim && !groupComplete; // group itself is "Up Next" if not done
   let pastFirstFuture  = false;
 
-  if (isElim) {
-    // Eliminated: single "Tournament Run" label, completed phases only
-    timelineInner += `<div class="path-section-label">Tournament Run</div>`;
-  } else if (groupComplete) {
-    timelineInner += `<div class="path-section-label">Road So Far</div>`;
-  } else {
-    timelineInner += `<div class="path-section-label">Up Next</div>`;
-  }
-
   timelineInner += `
     <div class="path-step">
       <div class="path-dot ${groupDot}"></div>
       <div class="path-phase-row">
-        <div class="path-phase ${groupDot}">${groupLabel}</div>
-        <div class="path-phase-right">${groupDateRange}</div>
+        <div class="path-phase ${groupDot}">${groupLabel}${isElim && elimRound === 'Group Stage' ? ' · Eliminated' : ''}</div>
+        <div class="path-phase-right">${groupComplete ? '' : groupDateRange}</div>
       </div>
       <div class="path-scroll">${groupCards}</div>
     </div>`;
@@ -2309,8 +2289,8 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
       <div class="path-step">
         <div class="path-dot ${r32DotClass}"></div>
         <div class="path-phase-row">
-          <div class="path-phase ${r32PhaseClass}">Round of 32</div>
-          <div class="path-phase-right">${r32HasScore ? r32Date : `Up next · ${r32Date}`}</div>
+          <div class="path-phase ${r32PhaseClass}">Round of 32${isElim && elimRound === 'Round of 32' ? ' · Eliminated' : ''}</div>
+          <div class="path-phase-right">${r32HasScore ? '' : `Up next · ${r32Date}`}</div>
         </div>
         <div class="path-scroll">${r32CardHtml}</div>
       </div>`;
@@ -2366,7 +2346,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           r16DotClass = result.dotClass;
           r16PhaseClass = result.phaseClass;
           r16CardHtml = result.cardHtml;
-          r16PhaseRight = result.date;
+          r16PhaseRight = '';
           if (result.cardClass === 'loss') sawOwnLoss = true;
           ownGameNum = r16GameNum;
         } else {
@@ -2378,7 +2358,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           <div class="path-step">
             <div class="path-dot ${r16DotClass}"></div>
             <div class="path-phase-row">
-              <div class="path-phase ${r16PhaseClass}">Round of 16</div>
+              <div class="path-phase ${r16PhaseClass}">Round of 16${isElim && elimRound === 'Round of 16' ? ' · Eliminated' : ''}</div>
               <div class="path-phase-right">${r16PhaseRight}</div>
             </div>
             <div class="path-scroll">${r16CardHtml}</div>
@@ -2417,19 +2397,19 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           qfDotClass = result.dotClass;
           qfPhaseClass = result.phaseClass;
           qfCardsHtml = result.cardHtml;
-          qfPhaseRight = result.date;
+          qfPhaseRight = '';
           if (result.cardClass === 'loss') sawOwnLoss = true;
           ownGameNum = qfGameNum;
         } else {
-          qfCardsHtml = resolvePoolCards(scheduleData, bracketPath.qf || [], 'qf', undefined, qfShowTime, qfOwnKickoff);
-          if (qfShowTime) qfPhaseRight = formatKickoff(qfOwnKickoff).date;
+          qfCardsHtml = resolvePoolCards(scheduleData, bracketPath.qf || [], 'qf', teamName, qfShowTime, qfOwnKickoff);
+          if (qfShowTime) qfPhaseRight = '';
         }
 
         timelineInner += `
           <div class="path-step">
             <div class="path-dot ${qfDotClass}"></div>
             <div class="path-phase-row">
-              <div class="path-phase ${qfPhaseClass}">Quarter-Final</div>
+              <div class="path-phase ${qfPhaseClass}">Quarter-Final${isElim && elimRound === 'Quarter-Final' ? ' · Eliminated' : ''}</div>
               <div class="path-phase-right">${qfPhaseRight}</div>
             </div>
             <div class="path-scroll">${qfCardsHtml}</div>
@@ -2461,12 +2441,12 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           const result = teamResultCard(sfRow, teamName);
           sfDotClass = result.dotClass;
           sfCardsHtml = result.cardHtml;
-          sfPhaseRight = result.date;
+          sfPhaseRight = '';
           if (result.cardClass === 'loss') sawOwnLoss = true;
           ownGameNum = sfGameNum;
         } else {
-          sfCardsHtml = resolvePoolCards(scheduleData, bracketPath.sf || [], 'sf', undefined, sfShowTime, sfOwnKickoff);
-          if (sfShowTime) sfPhaseRight = formatKickoff(sfOwnKickoff).date;
+          sfCardsHtml = resolvePoolCards(scheduleData, bracketPath.sf || [], 'sf', teamName, sfShowTime, sfOwnKickoff);
+          if (sfShowTime) sfPhaseRight = '';
         }
 
         const sfPhaseClass = sfIsComplete ? sfDotClass : 'sf';
@@ -2474,7 +2454,7 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           <div class="path-step">
             <div class="path-dot ${sfDotClass}"></div>
             <div class="path-phase-row">
-              <div class="path-phase ${sfPhaseClass}">Semi-Final</div>
+              <div class="path-phase ${sfPhaseClass}">Semi-Final${isElim && elimRound === 'Semi-Final' ? ' · Eliminated' : ''}</div>
               <div class="path-phase-right">${sfPhaseRight}</div>
             </div>
             <div class="path-scroll">${sfCardsHtml}</div>
@@ -2502,10 +2482,10 @@ function buildPathwayHTML(playerRank, playerName, playerTotal, teamRaw, label, s
           const result = teamResultCard(finalRow, teamName);
           finalDotClass = result.dotClass;
           finalCardsHtml = result.cardHtml;
-          finalPhaseRight = result.date;
+          finalPhaseRight = '';
         } else {
-          finalCardsHtml = resolvePoolCards(scheduleData, bracketPath.final || [], 'final', undefined, finalShowTime, finalOwnKickoff);
-          if (finalShowTime) finalPhaseRight = formatKickoff(finalOwnKickoff).date;
+          finalCardsHtml = resolvePoolCards(scheduleData, bracketPath.final || [], 'final', teamName, finalShowTime, finalOwnKickoff);
+          if (finalShowTime) finalPhaseRight = '';
         }
 
         const finalPhaseClass = finalIsComplete ? finalDotClass : 'final';
