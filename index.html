@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  DUTTON RANCH WC2026 POOL — v2.2.2.0
+  DUTTON RANCH WC2026 POOL — v2.2.2.1
   Sheet ID: 13tYn4PD4_09pZjxbfIO3isLue7VroJaPd5l-olkd-dA
   Tabs: Leaderboard · Schedule · Results · Meta · Player Picks
   Leaderboard cols : A=Rank B=Name C=Total D=1st E=2nd F=3rd G=4th H=Debut I=FanFav J=IsBot K=RealName
@@ -1645,7 +1645,7 @@
   </div>
 
   <div class="footer">
-    <div>v2.2.2.0 · July 2026 · Created by Mason Dutton</div>
+    <div>v2.2.2.1 · July 2026 · Created by Mason Dutton</div>
   </div>
 
 </div>
@@ -1868,22 +1868,25 @@ function resolveUpward(scheduleData, startGameNum) {
 // excludeTeamName (optional, R16 only): passed through to futureGameCard so
 // the selected team's own R16 slot shows the opponent only, not a redundant
 // "Team vs Team" card — see futureGameCard for details.
-// Groups the pool by shared R16 destination, resolves each group as far up
-// the real bracket as the sheet allows, and renders one card per group —
-// always styled at this row's own tier, per Mason's "color = the row"
-// decision, regardless of which actual game level backs the card's content.
+// Resolves each R32 entry in the pool as far up the real bracket as the
+// sheet allows, then dedupes by the RESOLVED game's own row (col A game
+// number) — not by raw R32 sibling pairing. Two R32 pairs that are R16-
+// siblings of DIFFERENT games can still converge on the same upstream
+// QF/SF/Final game once results come in (e.g. two separate R16 pairs
+// both feeding the same QF), which produced duplicate cards under the
+// old pre-resolution grouping. Resolving first and deduping after fixes
+// that while still rendering one card per group — always styled at this
+// row's own tier, per Mason's "color = the row" decision, regardless of
+// which actual game level backs the card's content.
 function resolvePoolCards(scheduleData, r32Pool, tier, excludeTeamName, showTime, ownKickoff) {
-  const seen = new Set();
+  const seenGameNums = new Set();
   const cards = [];
   r32Pool.forEach(r32Num => {
-    if (seen.has(r32Num)) return;
-    const r16Dest = GAME_CHAIN[r32Num];
-    // Find this R32 game's sibling within the pool (shares the same r16Dest)
-    const sibling = r32Pool.find(n => n !== r32Num && GAME_CHAIN[n] === r16Dest);
-    if (sibling !== undefined) seen.add(sibling);
-    seen.add(r32Num);
-
     const resolvedRow = resolveUpward(scheduleData, r32Num);
+    const resolvedGameNum = resolvedRow ? String(resolvedRow[0]).trim() : `unresolved-${r32Num}`;
+    if (seenGameNums.has(resolvedGameNum)) return;
+    seenGameNums.add(resolvedGameNum);
+
     cards.push(futureGameCard(resolvedRow, tier, excludeTeamName, showTime, ownKickoff));
   });
   return cards.join('');
